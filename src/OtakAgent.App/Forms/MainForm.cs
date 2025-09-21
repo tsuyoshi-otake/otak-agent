@@ -185,25 +185,36 @@ public partial class MainForm : Form
         using var bitmap = new Bitmap(width, height);
         using var g = Graphics.FromImage(bitmap);
         g.SmoothingMode = SmoothingMode.HighQuality;
+        g.Clear(Color.FromArgb(255, 255, 206));
+
+        const int topOffset = 1;
+        const int bottomOffset = 1;
 
         var topHeight = _bubbleTopImage.Height;
         var bottomHeight = _bubbleBottomImage.Height;
-        var centerHeight = Math.Max(0, height - topHeight - bottomHeight);
 
-        g.DrawImage(_bubbleTopImage, new Rectangle(0, 0, width, topHeight));
-        g.DrawImage(_bubbleBottomImage, new Rectangle(0, height - bottomHeight, width, bottomHeight));
+        var topY = Math.Min(topOffset, Math.Max(0, height - topHeight));
+        var bottomY = Math.Max(topY + topHeight, height - bottomHeight - bottomOffset);
+        if (bottomY < 0)
+        {
+            bottomY = 0;
+        }
+
+        var centerStart = topY + topHeight;
+        var centerHeight = Math.Max(0, bottomY - centerStart);
         if (centerHeight > 0)
         {
             using var texture = new TextureBrush(_bubbleCenterImage, WrapMode.Tile);
             texture.ScaleTransform((float)width / _bubbleCenterImage.Width, 1f);
-            g.FillRectangle(texture, new Rectangle(0, topHeight, width, centerHeight));
+            g.FillRectangle(texture, new Rectangle(0, centerStart, width, centerHeight));
         }
+
+        g.DrawImage(_bubbleTopImage, new Rectangle(0, topY, width, topHeight));
+        g.DrawImage(_bubbleBottomImage, new Rectangle(0, bottomY, width, bottomHeight));
 
         _bubblePanel.BackgroundImage?.Dispose();
         _bubblePanel.BackgroundImage = (Image)bitmap.Clone();
-    }
-
-    private void PositionWindow()
+    }    private void PositionWindow()
     {
         var workingArea = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 720);
         var targetX = workingArea.Right - Width - 20;
