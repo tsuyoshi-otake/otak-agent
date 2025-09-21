@@ -190,18 +190,17 @@ public partial class MainForm : Form
         const int topOffset = 1;
         const int bottomOffset = 1;
 
-        var topHeight = _bubbleTopImage.Height;
-        var bottomHeight = _bubbleBottomImage.Height;
+        var topCrop = Math.Min(topOffset, Math.Max(0, _bubbleTopImage.Height - 1));
+        var bottomCrop = Math.Min(bottomOffset, Math.Max(0, _bubbleBottomImage.Height - 1));
 
-        var topY = Math.Min(topOffset, Math.Max(0, height - topHeight));
-        var bottomY = Math.Max(topY + topHeight, height - bottomHeight - bottomOffset);
-        if (bottomY < 0)
-        {
-            bottomY = 0;
-        }
+        var topSrcHeight = Math.Max(0, _bubbleTopImage.Height - topCrop);
+        var bottomSrcHeight = Math.Max(0, _bubbleBottomImage.Height - bottomCrop);
 
-        var centerStart = topY + topHeight;
-        var centerHeight = Math.Max(0, bottomY - centerStart);
+        var topDestY = topOffset;
+        var bottomDestY = Math.Max(topDestY + topSrcHeight, height - bottomSrcHeight - bottomOffset);
+
+        var centerStart = topDestY + topSrcHeight;
+        var centerHeight = Math.Max(0, bottomDestY - centerStart);
         if (centerHeight > 0)
         {
             using var texture = new TextureBrush(_bubbleCenterImage, WrapMode.Tile);
@@ -209,12 +208,24 @@ public partial class MainForm : Form
             g.FillRectangle(texture, new Rectangle(0, centerStart, width, centerHeight));
         }
 
-        g.DrawImage(_bubbleTopImage, new Rectangle(0, topY, width, topHeight));
-        g.DrawImage(_bubbleBottomImage, new Rectangle(0, bottomY, width, bottomHeight));
+        if (topSrcHeight > 0)
+        {
+            var topSource = new Rectangle(0, topCrop, _bubbleTopImage.Width, topSrcHeight);
+            var topDest = new Rectangle(0, topDestY, width, topSrcHeight);
+            g.DrawImage(_bubbleTopImage, topDest, topSource, GraphicsUnit.Pixel);
+        }
+
+        if (bottomSrcHeight > 0)
+        {
+            var bottomSource = new Rectangle(0, 0, _bubbleBottomImage.Width, bottomSrcHeight);
+            var bottomDest = new Rectangle(0, bottomDestY, width, bottomSrcHeight);
+            g.DrawImage(_bubbleBottomImage, bottomDest, bottomSource, GraphicsUnit.Pixel);
+        }
 
         _bubblePanel.BackgroundImage?.Dispose();
         _bubblePanel.BackgroundImage = (Image)bitmap.Clone();
-    }    private void PositionWindow()
+    }
+    private void PositionWindow()
     {
         var workingArea = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 720);
         var targetX = workingArea.Right - Width - 20;
