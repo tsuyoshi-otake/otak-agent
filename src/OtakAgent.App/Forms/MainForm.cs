@@ -34,6 +34,8 @@ public partial class MainForm : Form
     private const string EnglishPlaceholderText = "Type your question here, and then click Send.";
     private const string JapanesePlaceholderText = "ここに質問を書いて『送信』ボタンを押してください。";
 
+    private bool _isPlaceholderActive;
+
     public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder)
     {
         _settingsService = settingsService;
@@ -84,17 +86,22 @@ public partial class MainForm : Form
     {
         Text = "AgentTalk";
         _promptLabel.Text = _settings.English ? "What would you like to do?" : "何をしますか？";
-        if (ShouldShowPlaceholderText())
+
+        if (string.IsNullOrWhiteSpace(_inputTextBox.Text) || _isPlaceholderActive || IsPlaceholderText(_inputTextBox.Text))
         {
-            _inputTextBox.Text = PlaceholderText();
+            ShowPlaceholder();
         }
+        else
+        {
+            _isPlaceholderActive = false;
+        }
+
         _sendButton.Text = SendText();
         _secondaryButton.Text = OptionsText();
         _notifyToggleTopMostMenuItem.Text = _settings.English ? "Always on Top" : "常に手前に表示";
         _notifyExitMenuItem.Text = _settings.English ? "Exit" : "終了";
         _toolTip.SetToolTip(_characterPicture, _settings.English ? "Double-click to bring AgentTalk to front" : "ダブルクリックでAgentTalkを手前に表示");
     }
-
     private void ApplyBubbleLayout()
     {
         const int bubbleWidth = 226;
@@ -234,13 +241,7 @@ public partial class MainForm : Form
             return;
         }
 
-        var rawInput = _inputTextBox.Text;
-        if (IsPlaceholderText(rawInput))
-        {
-            rawInput = string.Empty;
-        }
-
-        var question = rawInput.Trim();
+        var question = _isPlaceholderActive ? string.Empty : _inputTextBox.Text.Trim();
         if (string.IsNullOrEmpty(question))
         {
             SystemSounds.Beep.Play();
@@ -329,15 +330,20 @@ public partial class MainForm : Form
         _secondaryButton.Text = OptionsText();
         _inputTextBox.ReadOnly = false;
         _inputTextBox.BackColor = Color.White;
-        if (clearText)
+
+        if (clearText || string.IsNullOrWhiteSpace(_inputTextBox.Text) || IsPlaceholderText(_inputTextBox.Text))
         {
-            _inputTextBox.Clear();
+            ShowPlaceholder();
         }
+        else
+        {
+            _isPlaceholderActive = false;
+        }
+
         _inputTextBox.Focus();
         _promptLabel.Text = _settings.English ? "What would you like to do?" : "何をしますか？";
         UpdateTooltips();
     }
-
     private void BeginProcessing()
     {
         _isProcessing = true;
@@ -377,26 +383,37 @@ public partial class MainForm : Form
 
     private string PlaceholderText() => _settings.English ? EnglishPlaceholderText : JapanesePlaceholderText;
 
-    private bool ShouldShowPlaceholderText()
+    private static bool IsPlaceholderText(string value) => value == EnglishPlaceholderText || value == JapanesePlaceholderText;
+
+    private void ShowPlaceholder()
     {
-        var current = _inputTextBox.Text;
-        return string.IsNullOrWhiteSpace(current) || IsPlaceholderText(current);
+        _isPlaceholderActive = true;
+        _inputTextBox.Text = PlaceholderText();
     }
 
-    private static bool IsPlaceholderText(string value) => value == EnglishPlaceholderText || value == JapanesePlaceholderText;
-    private void InputTextBox_Enter(object? sender, EventArgs e)
+    private void ClearPlaceholderIfNeeded()
     {
-        if (IsPlaceholderText(_inputTextBox.Text))
+        if (_isPlaceholderActive || IsPlaceholderText(_inputTextBox.Text))
         {
+            _isPlaceholderActive = false;
             _inputTextBox.Clear();
         }
+    }
+
+    private void InputTextBox_Enter(object? sender, EventArgs e)
+    {
+        ClearPlaceholderIfNeeded();
     }
 
     private void InputTextBox_Leave(object? sender, EventArgs e)
     {
         if (string.IsNullOrWhiteSpace(_inputTextBox.Text))
         {
-            _inputTextBox.Text = PlaceholderText();
+            ShowPlaceholder();
+        }
+        else
+        {
+            _isPlaceholderActive = IsPlaceholderText(_inputTextBox.Text);
         }
     }
     private void InputTextBox_KeyDown(object? sender, KeyEventArgs e)
