@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Media;
@@ -20,6 +21,9 @@ public partial class MainForm : Form
     private readonly PersonalityPromptBuilder _personalityPromptBuilder;
     private readonly List<ChatMessage> _history = new();
     private readonly System.Windows.Forms.Timer _animationTimer;
+
+    private static readonly Color BubbleFillColor = Color.FromArgb(255, 255, 206);
+    private static readonly Color MagentaColorKey = Color.Magenta;
 
     private AgentTalkSettings _settings = AgentTalkSettings.CreateDefault();
     private Image? _primaryCharacterFrame;
@@ -144,9 +148,9 @@ public partial class MainForm : Form
         _secondaryCharacterFrame = LoadImageFromResources($"{baseImageName}.gif");
         SetCharacterImage(_primaryCharacterFrame);
 
-        _bubbleTopImage = LoadImageFromResources("windowTop.png");
-        _bubbleCenterImage = LoadImageFromResources("windowCenter.png");
-        _bubbleBottomImage = LoadImageFromResources("windowBottom.png");
+        _bubbleTopImage = LoadImageFromResources("windowTop.png", treatMagentaAsTransparent: true);
+        _bubbleCenterImage = LoadImageFromResources("windowCenter.png", treatMagentaAsTransparent: true);
+        _bubbleBottomImage = LoadImageFromResources("windowBottom.png", treatMagentaAsTransparent: true);
         UpdateBubbleBackground();
 
         var soundPath = GetResourcePath(_settings.English ? "clippy.wav" : "kairu.wav");
@@ -182,10 +186,17 @@ public partial class MainForm : Form
 
         var width = _bubblePanel.Width;
         var height = _bubblePanel.Height;
-        using var bitmap = new Bitmap(width, height);
+        using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
         using var g = Graphics.FromImage(bitmap);
         g.SmoothingMode = SmoothingMode.HighQuality;
-        g.Clear(Color.FromArgb(255, 255, 206));
+        g.CompositingMode = CompositingMode.SourceOver;
+        g.CompositingQuality = CompositingQuality.HighQuality;
+        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        g.Clear(Color.Transparent);
+
+        using var attributes = new ImageAttributes();
+        attributes.SetColorKey(MagentaColorKey, MagentaColorKey);
 
         const int topOffset = 1;
         const int bottomOffset = 1;
@@ -203,23 +214,27 @@ public partial class MainForm : Form
         var centerHeight = Math.Max(0, bottomDestY - centerStart);
         if (centerHeight > 0)
         {
-            using var texture = new TextureBrush(_bubbleCenterImage, WrapMode.Tile);
-            texture.ScaleTransform((float)width / _bubbleCenterImage.Width, 1f);
-            g.FillRectangle(texture, new Rectangle(0, centerStart, width, centerHeight));
+            using var fillBrush = new SolidBrush(BubbleFillColor);
+            g.FillRectangle(fillBrush, new Rectangle(0, centerStart, width, centerHeight));
+
+            if (_bubbleCenterImage is not null)
+            {
+                DrawTiledImage(g, _bubbleCenterImage, new Rectangle(0, centerStart, width, centerHeight), attributes);
+            }
         }
 
         if (topSrcHeight > 0)
         {
             var topSource = new Rectangle(0, topCrop, _bubbleTopImage.Width, topSrcHeight);
             var topDest = new Rectangle(0, topDestY, width, topSrcHeight);
-            g.DrawImage(_bubbleTopImage, topDest, topSource, GraphicsUnit.Pixel);
+            g.DrawImage(_bubbleTopImage, topDest, topSource.X, topSource.Y, topSource.Width, topSource.Height, GraphicsUnit.Pixel, attributes);
         }
 
         if (bottomSrcHeight > 0)
         {
             var bottomSource = new Rectangle(0, 0, _bubbleBottomImage.Width, bottomSrcHeight);
             var bottomDest = new Rectangle(0, bottomDestY, width, bottomSrcHeight);
-            g.DrawImage(_bubbleBottomImage, bottomDest, bottomSource, GraphicsUnit.Pixel);
+            g.DrawImage(_bubbleBottomImage, bottomDest, bottomSource.X, bottomSource.Y, bottomSource.Width, bottomSource.Height, GraphicsUnit.Pixel, attributes);
         }
 
         _bubblePanel.BackgroundImage?.Dispose();
@@ -540,7 +555,25 @@ public partial class MainForm : Form
         }
     }
 
-    private Image? LoadImageFromResources(string fileName)
+    private static void DrawTiledImage(Graphics graphics, Image tile, Rectangle destination, ImageAttributes attributes)
+    {
+        var tileWidth = tile.Width;
+        var tileHeight = tile.Height;
+
+        for (var y = destination.Top; y < destination.Bottom; y += tileHeight)
+        {
+            var remainingHeight = Math.Min(tileHeight, destination.Bottom - y);
+            for (var x = destination.Left; x < destination.Right; x += tileWidth)
+            {
+                var remainingWidth = Math.Min(tileWidth, destination.Right - x);
+                var destRect = new Rectangle(x, y, remainingWidth, remainingHeight);
+                var srcRect = new Rectangle(0, 0, remainingWidth, remainingHeight);
+                graphics.DrawImage(tile, destRect, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, GraphicsUnit.Pixel, attributes);
+            }
+        }
+    }
+
+    private Image? LoadImageFromResources(string fileName, bool treatMagentaAsTransparent = false)
     {
         var path = GetResourcePath(fileName);
         if (!File.Exists(path))
@@ -550,7 +583,13 @@ public partial class MainForm : Form
 
         try
         {
-            return new Bitmap(path);
+            var bitmap = new Bitmap(path);
+            if (treatMagentaAsTransparent)
+            {
+                bitmap.MakeTransparent(MagentaColorKey);
+            }
+
+            return bitmap;
         }
         catch
         {
