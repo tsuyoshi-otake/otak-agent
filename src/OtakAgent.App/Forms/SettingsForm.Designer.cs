@@ -1,0 +1,181 @@
+#nullable enable
+using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace OtakAgent.App.Forms;
+
+partial class SettingsForm
+{
+    private IContainer? components = null;
+    private CheckBox _englishCheckBox = null!;
+    private CheckBox _expandedTextboxCheckBox = null!;
+    private CheckBox _enablePersonalityCheckBox = null!;
+    private CheckBox _autoCopyCheckBox = null!;
+    private CheckBox _historyCheckBox = null!;
+    private CheckBox _hotkeyCheckBox = null!;
+    private TextBox _hostTextBox = null!;
+    private TextBox _endpointTextBox = null!;
+    private TextBox _apiKeyTextBox = null!;
+    private TextBox _modelTextBox = null!;
+    private TextBox _systemPromptTextBox = null!;
+    private TextBox _personalityOverrideTextBox = null!;
+    private NumericUpDown _hotkeyIntervalNumeric = null!;
+    private Button _saveButton = null!;
+    private Button _cancelButton = null!;
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            components?.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
+    private void InitializeComponent()
+    {
+        components = new Container();
+        _englishCheckBox = new CheckBox();
+        _expandedTextboxCheckBox = new CheckBox();
+        _enablePersonalityCheckBox = new CheckBox();
+        _autoCopyCheckBox = new CheckBox();
+        _historyCheckBox = new CheckBox();
+        _hotkeyCheckBox = new CheckBox();
+        _hostTextBox = new TextBox();
+        _endpointTextBox = new TextBox();
+        _apiKeyTextBox = new TextBox();
+        _modelTextBox = new TextBox();
+        _systemPromptTextBox = new TextBox();
+        _personalityOverrideTextBox = new TextBox();
+        _hotkeyIntervalNumeric = new NumericUpDown();
+        _saveButton = new Button();
+        _cancelButton = new Button();
+        ((ISupportInitialize)_hotkeyIntervalNumeric).BeginInit();
+        SuspendLayout();
+        _englishCheckBox.AutoSize = true;
+        _englishCheckBox.Location = new Point(18, 18);
+        _englishCheckBox.Name = "_englishCheckBox";
+        _englishCheckBox.Size = new Size(115, 19);
+        _englishCheckBox.TabIndex = 0;
+        _englishCheckBox.Text = "Use English UI";
+        _englishCheckBox.UseVisualStyleBackColor = true;
+        _expandedTextboxCheckBox.AutoSize = true;
+        _expandedTextboxCheckBox.Location = new Point(18, 43);
+        _expandedTextboxCheckBox.Name = "_expandedTextboxCheckBox";
+        _expandedTextboxCheckBox.Size = new Size(171, 19);
+        _expandedTextboxCheckBox.TabIndex = 1;
+        _expandedTextboxCheckBox.Text = "Expanded input text area";
+        _expandedTextboxCheckBox.UseVisualStyleBackColor = true;
+        _enablePersonalityCheckBox.AutoSize = true;
+        _enablePersonalityCheckBox.Location = new Point(18, 68);
+        _enablePersonalityCheckBox.Name = "_enablePersonalityCheckBox";
+        _enablePersonalityCheckBox.Size = new Size(168, 19);
+        _enablePersonalityCheckBox.TabIndex = 2;
+        _enablePersonalityCheckBox.Text = "Enable Clippy/Kairu persona";
+        _enablePersonalityCheckBox.UseVisualStyleBackColor = true;
+        _autoCopyCheckBox.AutoSize = true;
+        _autoCopyCheckBox.Location = new Point(18, 93);
+        _autoCopyCheckBox.Name = "_autoCopyCheckBox";
+        _autoCopyCheckBox.Size = new Size(207, 19);
+        _autoCopyCheckBox.TabIndex = 3;
+        _autoCopyCheckBox.Text = "Auto-copy responses to clipboard";
+        _autoCopyCheckBox.UseVisualStyleBackColor = true;
+        _historyCheckBox.AutoSize = true;
+        _historyCheckBox.Location = new Point(18, 118);
+        _historyCheckBox.Name = "_historyCheckBox";
+        _historyCheckBox.Size = new Size(181, 19);
+        _historyCheckBox.TabIndex = 4;
+        _historyCheckBox.Text = "Keep conversation history";
+        _historyCheckBox.UseVisualStyleBackColor = true;
+        _hotkeyCheckBox.AutoSize = true;
+        _hotkeyCheckBox.Location = new Point(18, 143);
+        _hotkeyCheckBox.Name = "_hotkeyCheckBox";
+        _hotkeyCheckBox.Size = new Size(245, 19);
+        _hotkeyCheckBox.TabIndex = 5;
+        _hotkeyCheckBox.Text = "Enable double Ctrl+C clipboard hotkey";
+        _hotkeyCheckBox.UseVisualStyleBackColor = true;
+        _hotkeyIntervalNumeric.Increment = new decimal(new int[] { 50, 0, 0, 0 });
+        _hotkeyIntervalNumeric.Location = new Point(280, 141);
+        _hotkeyIntervalNumeric.Maximum = new decimal(new int[] { 2000, 0, 0, 0 });
+        _hotkeyIntervalNumeric.Minimum = new decimal(new int[] { 100, 0, 0, 0 });
+        _hotkeyIntervalNumeric.Name = "_hotkeyIntervalNumeric";
+        _hotkeyIntervalNumeric.Size = new Size(80, 23);
+        _hotkeyIntervalNumeric.TabIndex = 6;
+        _hotkeyIntervalNumeric.Value = new decimal(new int[] { 500, 0, 0, 0 });
+        _hostTextBox.Location = new Point(18, 192);
+        _hostTextBox.Name = "_hostTextBox";
+        _hostTextBox.PlaceholderText = "Host (e.g. api.openai.com)";
+        _hostTextBox.Size = new Size(342, 23);
+        _hostTextBox.TabIndex = 7;
+        _endpointTextBox.Location = new Point(18, 221);
+        _endpointTextBox.Name = "_endpointTextBox";
+        _endpointTextBox.PlaceholderText = "Endpoint (e.g. /v1/chat/completions)";
+        _endpointTextBox.Size = new Size(342, 23);
+        _endpointTextBox.TabIndex = 8;
+        _apiKeyTextBox.Location = new Point(18, 250);
+        _apiKeyTextBox.Name = "_apiKeyTextBox";
+        _apiKeyTextBox.PlaceholderText = "API Key";
+        _apiKeyTextBox.Size = new Size(342, 23);
+        _apiKeyTextBox.TabIndex = 9;
+        _apiKeyTextBox.UseSystemPasswordChar = true;
+        _modelTextBox.Location = new Point(18, 279);
+        _modelTextBox.Name = "_modelTextBox";
+        _modelTextBox.PlaceholderText = "Model (e.g. gpt-4o-mini)";
+        _modelTextBox.Size = new Size(342, 23);
+        _modelTextBox.TabIndex = 10;
+        _personalityOverrideTextBox.Location = new Point(18, 316);
+        _personalityOverrideTextBox.Multiline = true;
+        _personalityOverrideTextBox.Name = "_personalityOverrideTextBox";
+        _personalityOverrideTextBox.PlaceholderText = "Persona override (optional)";
+        _personalityOverrideTextBox.ScrollBars = ScrollBars.Vertical;
+        _personalityOverrideTextBox.Size = new Size(342, 72);
+        _personalityOverrideTextBox.TabIndex = 11;
+        _systemPromptTextBox.Location = new Point(18, 408);
+        _systemPromptTextBox.Multiline = true;
+        _systemPromptTextBox.Name = "_systemPromptTextBox";
+        _systemPromptTextBox.PlaceholderText = "Additional system prompt";
+        _systemPromptTextBox.ScrollBars = ScrollBars.Vertical;
+        _systemPromptTextBox.Size = new Size(342, 96);
+        _systemPromptTextBox.TabIndex = 12;
+        _saveButton.Location = new Point(198, 522);
+        _saveButton.Name = "_saveButton";
+        _saveButton.Size = new Size(80, 32);
+        _saveButton.TabIndex = 13;
+        _saveButton.Text = "Save";
+        _saveButton.UseVisualStyleBackColor = true;
+        _cancelButton.Location = new Point(280, 522);
+        _cancelButton.Name = "_cancelButton";
+        _cancelButton.Size = new Size(80, 32);
+        _cancelButton.TabIndex = 14;
+        _cancelButton.Text = "Cancel";
+        _cancelButton.UseVisualStyleBackColor = true;
+        AutoScaleDimensions = new SizeF(7F, 15F);
+        AutoScaleMode = AutoScaleMode.Font;
+        ClientSize = new Size(382, 566);
+        Controls.Add(_cancelButton);
+        Controls.Add(_saveButton);
+        Controls.Add(_systemPromptTextBox);
+        Controls.Add(_personalityOverrideTextBox);
+        Controls.Add(_modelTextBox);
+        Controls.Add(_apiKeyTextBox);
+        Controls.Add(_endpointTextBox);
+        Controls.Add(_hostTextBox);
+        Controls.Add(_hotkeyIntervalNumeric);
+        Controls.Add(_hotkeyCheckBox);
+        Controls.Add(_historyCheckBox);
+        Controls.Add(_autoCopyCheckBox);
+        Controls.Add(_enablePersonalityCheckBox);
+        Controls.Add(_expandedTextboxCheckBox);
+        Controls.Add(_englishCheckBox);
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false;
+        MinimizeBox = false;
+        Name = "SettingsForm";
+        StartPosition = FormStartPosition.CenterParent;
+        Text = "Settings";
+        ((ISupportInitialize)_hotkeyIntervalNumeric).EndInit();
+        ResumeLayout(false);
+        PerformLayout();
+    }
+}
