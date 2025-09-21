@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -31,6 +31,9 @@ public partial class MainForm : Form
     private bool _isProcessing;
     private Point? _dragOffset;
 
+    private const string EnglishPlaceholderText = "Type your question here, and then click Send.";
+    private const string JapanesePlaceholderText = "ここに質問を書いて『送信』ボタンを押してください。";
+
     public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder)
     {
         _settingsService = settingsService;
@@ -48,6 +51,8 @@ public partial class MainForm : Form
         _notifyExitMenuItem.Click += (_, _) => Close();
         _notifyIcon.MouseDoubleClick += (_, _) => ToggleWindowVisibility(true);
         _inputTextBox.KeyDown += InputTextBox_KeyDown;
+        _inputTextBox.Enter += InputTextBox_Enter;
+        _inputTextBox.Leave += InputTextBox_Leave;
         _bubblePanel.MouseDown += BubblePanel_MouseDown;
         _bubblePanel.MouseMove += BubblePanel_MouseMove;
         _bubblePanel.SizeChanged += (_, _) => UpdateBubbleBackground();
@@ -79,7 +84,10 @@ public partial class MainForm : Form
     {
         Text = "AgentTalk";
         _promptLabel.Text = _settings.English ? "What would you like to do?" : "何をしますか？";
-        _inputTextBox.Text = _settings.English ? "Type your question here, and then click Send." : "ここに質問を書いて『送信』ボタンを押してください。";
+        if (ShouldShowPlaceholderText())
+        {
+            _inputTextBox.Text = PlaceholderText();
+        }
         _sendButton.Text = SendText();
         _secondaryButton.Text = OptionsText();
         _notifyToggleTopMostMenuItem.Text = _settings.English ? "Always on Top" : "常に手前に表示";
@@ -90,21 +98,21 @@ public partial class MainForm : Form
     private void ApplyBubbleLayout()
     {
         const int bubbleWidth = 226;
-        const int bubbleHeight = 142;
-        _bubblePanel.Location = new Point(44, 27);
+        const int bubbleHeight = 148;
+        _bubblePanel.Location = new Point(44, 24);
         _bubblePanel.Size = new Size(bubbleWidth, bubbleHeight);
 
-        _promptLabel.MaximumSize = new Size(202, 0);
-        _promptLabel.Location = new Point(12, 12);
+        _promptLabel.MaximumSize = new Size(194, 0);
+        _promptLabel.Location = new Point(16, 14);
 
-        _inputTextBox.Location = new Point(12, 38);
-        _inputTextBox.Size = new Size(202, 52);
+        _inputTextBox.Location = new Point(16, 42);
+        _inputTextBox.Size = new Size(194, 56);
 
-        _secondaryButton.Size = new Size(90, 32);
-        _secondaryButton.Location = new Point(12, 104);
+        _secondaryButton.Size = new Size(76, 20);
+        _secondaryButton.Location = new Point(12, 105);
 
-        _sendButton.Size = new Size(90, 32);
-        _sendButton.Location = new Point(124, 104);
+        _sendButton.Size = new Size(76, 20);
+        _sendButton.Location = new Point(138, 105);
     }
 
     private void LoadAssets()
@@ -226,7 +234,13 @@ public partial class MainForm : Form
             return;
         }
 
-        var question = _inputTextBox.Text.Trim();
+        var rawInput = _inputTextBox.Text;
+        if (IsPlaceholderText(rawInput))
+        {
+            rawInput = string.Empty;
+        }
+
+        var question = rawInput.Trim();
         if (string.IsNullOrEmpty(question))
         {
             SystemSounds.Beep.Play();
@@ -361,6 +375,30 @@ public partial class MainForm : Form
         _toolTip.SetToolTip(_secondaryButton, secondaryTooltip);
     }
 
+    private string PlaceholderText() => _settings.English ? EnglishPlaceholderText : JapanesePlaceholderText;
+
+    private bool ShouldShowPlaceholderText()
+    {
+        var current = _inputTextBox.Text;
+        return string.IsNullOrWhiteSpace(current) || IsPlaceholderText(current);
+    }
+
+    private static bool IsPlaceholderText(string value) => value == EnglishPlaceholderText || value == JapanesePlaceholderText;
+    private void InputTextBox_Enter(object? sender, EventArgs e)
+    {
+        if (IsPlaceholderText(_inputTextBox.Text))
+        {
+            _inputTextBox.Clear();
+        }
+    }
+
+    private void InputTextBox_Leave(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_inputTextBox.Text))
+        {
+            _inputTextBox.Text = PlaceholderText();
+        }
+    }
     private void InputTextBox_KeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Control && e.KeyCode == Keys.Enter)

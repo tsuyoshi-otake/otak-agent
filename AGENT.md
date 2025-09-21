@@ -35,6 +35,7 @@
 - Async chat pipeline keeps the UI responsive without BackgroundWorker.
 - HttpClient enables custom endpoints and modern error handling.
 - JSON settings replace INI files; history persistence is opt-in for privacy.
+- Input textbox uses localized placeholder guidance that clears when focused and returns if left empty.
 - Asset handling stays compatible with legacy personas while preparing for embedded resources.
 
 ## Related references
