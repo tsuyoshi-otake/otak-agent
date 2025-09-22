@@ -130,7 +130,6 @@ public partial class MainForm : Form
     {
         _animationTimer.Stop();
 
-        _characterPicture.Image?.Dispose();
         _characterPicture.Image = null;
         DisposeCharacterFrames();
         DisposeBubbleImages();
@@ -491,19 +490,7 @@ public partial class MainForm : Form
             return;
         }
 
-        Image? clone = null;
-        try
-        {
-            clone = (Image)source.Clone();
-        }
-        catch
-        {
-            return;
-        }
-
-        var previous = _characterPicture.Image;
-        _characterPicture.Image = clone;
-        previous?.Dispose();
+        _characterPicture.Image = source;
     }
 
     private void BubblePanel_MouseDown(object? sender, MouseEventArgs e)
@@ -528,7 +515,6 @@ public partial class MainForm : Form
         _notifyIcon.Visible = false;
         _animationTimer.Stop();
         _animationTimer.Dispose();
-        _characterPicture.Image?.Dispose();
         _characterPicture.Image = null;
         DisposeCharacterFrames();
         DisposeBubbleImages();
@@ -657,28 +643,6 @@ public partial class MainForm : Form
                && blueDeviation <= maxDeviation;
     }
 
-    private static void ApplyMagentaTransparency(Bitmap bitmap)
-    {
-        for (var y = 0; y < bitmap.Height; y++)
-        {
-            for (var x = 0; x < bitmap.Width; x++)
-            {
-                var pixel = bitmap.GetPixel(x, y);
-                if (pixel.A == 0)
-                {
-                    continue;
-                }
-
-                if (!IsApproximatelyMagenta(pixel))
-                {
-                    continue;
-                }
-
-                bitmap.SetPixel(x, y, Color.FromArgb(0, pixel.R, pixel.G, pixel.B));
-            }
-        }
-    }
-
     private Image? LoadImageFromResources(string fileName, bool treatMagentaAsTransparent = false)
     {
         var path = GetResourcePath(fileName);
@@ -689,24 +653,7 @@ public partial class MainForm : Form
 
         try
         {
-            var bitmap = new Bitmap(path);
-            if (!treatMagentaAsTransparent)
-            {
-                return bitmap;
-            }
-
-            var converted = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format32bppArgb);
-            using (var graphics = Graphics.FromImage(converted))
-            {
-                graphics.CompositingMode = CompositingMode.SourceCopy;
-                graphics.DrawImage(bitmap, new Rectangle(0, 0, converted.Width, converted.Height));
-            }
-
-            bitmap.Dispose();
-
-            converted.MakeTransparent(MagentaColorKey);
-            ApplyMagentaTransparency(converted);
-            return converted;
+            return new Bitmap(path);
         }
         catch
         {

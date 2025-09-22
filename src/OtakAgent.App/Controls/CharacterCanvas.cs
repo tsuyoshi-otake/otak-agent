@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.ComponentModel;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 namespace OtakAgent.App.Controls;
@@ -9,7 +10,10 @@ namespace OtakAgent.App.Controls;
 internal sealed class CharacterCanvas : Control
 {
     private static readonly Color TransparentFillColor = Color.Magenta;
+    private static readonly Color MagentaColorKey = Color.Magenta;
+
     private Image? _image;
+    private bool _isAnimating;
 
     public CharacterCanvas()
     {
@@ -33,7 +37,15 @@ internal sealed class CharacterCanvas : Control
                 return;
             }
 
+            DetachAnimation();
             _image = value;
+
+            if (_image is not null && ImageAnimator.CanAnimate(_image))
+            {
+                ImageAnimator.Animate(_image, OnFrameChanged);
+                _isAnimating = true;
+            }
+
             Invalidate();
         }
     }
@@ -54,25 +66,47 @@ internal sealed class CharacterCanvas : Control
             return;
         }
 
+        if (_isAnimating)
+        {
+            ImageAnimator.UpdateFrames(image);
+        }
+
         var graphics = e.Graphics;
         graphics.CompositingMode = CompositingMode.SourceOver;
         graphics.CompositingQuality = CompositingQuality.HighQuality;
         graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
         graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
+        using var attributes = new ImageAttributes();
+        attributes.SetColorKey(MagentaColorKey, MagentaColorKey);
+
         var destination = CalculateDestinationRectangle(image);
-        graphics.DrawImage(image, destination);
+        graphics.DrawImage(image, destination, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attributes);
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            _image?.Dispose();
+            DetachAnimation();
             _image = null;
         }
 
         base.Dispose(disposing);
+    }
+
+    private void DetachAnimation()
+    {
+        if (_image is not null && _isAnimating)
+        {
+            ImageAnimator.StopAnimate(_image, OnFrameChanged);
+            _isAnimating = false;
+        }
+    }
+
+    private void OnFrameChanged(object? sender, EventArgs e)
+    {
+        Invalidate();
     }
 
     private Rectangle CalculateDestinationRectangle(Image image)
@@ -110,7 +144,3 @@ internal sealed class CharacterCanvas : Control
         return new Rectangle(offsetX, offsetY, width, height);
     }
 }
-
-
-
-
