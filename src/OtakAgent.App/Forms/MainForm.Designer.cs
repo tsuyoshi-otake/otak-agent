@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using OtakAgent.App.Controls;
 
 namespace OtakAgent.App.Forms;
 
@@ -13,7 +14,7 @@ partial class MainForm
     private TextBox _inputTextBox = null!;
     private Button _sendButton = null!;
     private Button _secondaryButton = null!;
-    private PictureBox _characterPicture = null!;
+    private CharacterCanvas _characterPicture = null!;
     private NotifyIcon _notifyIcon = null!;
     private ContextMenuStrip _notifyContextMenu = null!;
     private ToolStripMenuItem _notifyToggleTopMostMenuItem = null!;
@@ -43,14 +44,13 @@ partial class MainForm
         _inputTextBox = new TextBox();
         _sendButton = new Button();
         _secondaryButton = new Button();
-        _characterPicture = new PictureBox();
+        _characterPicture = new CharacterCanvas();
         _notifyIcon = new NotifyIcon(components);
         _notifyContextMenu = new ContextMenuStrip(components);
         _notifyToggleTopMostMenuItem = new ToolStripMenuItem();
         _notifyExitMenuItem = new ToolStripMenuItem();
         _toolTip = new ToolTip(components);
         _bubblePanel.SuspendLayout();
-        ((ISupportInitialize)_characterPicture).BeginInit();
         SuspendLayout();
         //
         //_bubblePanel
@@ -113,7 +113,6 @@ partial class MainForm
         _characterPicture.Margin = new Padding(0);
         _characterPicture.Name = "_characterPicture";
         _characterPicture.Size = new Size(100, 108);
-        _characterPicture.SizeMode = PictureBoxSizeMode.Zoom;
         _characterPicture.TabIndex = 1;
         _characterPicture.TabStop = false;
         //
@@ -173,7 +172,6 @@ partial class MainForm
         TransparencyKey = Color.Magenta;
         _bubblePanel.ResumeLayout(false);
         _bubblePanel.PerformLayout();
-        ((ISupportInitialize)_characterPicture).EndInit();
         ResumeLayout(false);
     }
 
@@ -191,3 +189,6 @@ partial class MainForm
         button.Font = new Font("MS PGothic", 9F, FontStyle.Regular, GraphicsUnit.Point);
     }
 }
+
+
+

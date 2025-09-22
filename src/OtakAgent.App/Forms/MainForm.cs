@@ -144,8 +144,8 @@ public partial class MainForm : Form
         }
 
         var baseImageName = _settings.English ? "clippy" : "kairu";
-        _primaryCharacterFrame = LoadImageFromResources($"{baseImageName}_start.gif");
-        _secondaryCharacterFrame = LoadImageFromResources($"{baseImageName}.gif");
+        _primaryCharacterFrame = LoadImageFromResources($"{baseImageName}_start.gif", treatMagentaAsTransparent: true);
+        _secondaryCharacterFrame = LoadImageFromResources($"{baseImageName}.gif", treatMagentaAsTransparent: true);
 
         var startFrameVisible = _primaryCharacterFrame is not null && HasVisibleContent(_primaryCharacterFrame);
         if (startFrameVisible)
@@ -584,19 +584,25 @@ public partial class MainForm : Form
 
     private static bool HasVisibleContent(Image image)
     {
+        const int minAlpha = 32;
+        const int fullyOpaqueAlpha = 224;
+        const int minFullyOpaquePixels = 200;
+        const int minAccumulatedAlpha = 50000;
+
         try
         {
             using var bitmap = new Bitmap(image);
             var width = bitmap.Width;
             var height = bitmap.Height;
-            var visiblePixels = 0;
+            var accumulatedAlpha = 0;
+            var fullyOpaquePixels = 0;
 
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++)
                 {
                     var pixel = bitmap.GetPixel(x, y);
-                    if (pixel.A < 32)
+                    if (pixel.A < minAlpha)
                     {
                         continue;
                     }
@@ -606,15 +612,19 @@ public partial class MainForm : Form
                         continue;
                     }
 
-                    visiblePixels++;
-                    if (visiblePixels >= 250)
+                    accumulatedAlpha += pixel.A;
+                    if (pixel.A >= fullyOpaqueAlpha)
                     {
-                        return true;
+                        fullyOpaquePixels++;
+                        if (fullyOpaquePixels >= minFullyOpaquePixels)
+                        {
+                            return true;
+                        }
                     }
                 }
             }
 
-            return visiblePixels > 0;
+            return accumulatedAlpha >= minAccumulatedAlpha;
         }
         catch
         {
@@ -624,10 +634,49 @@ public partial class MainForm : Form
 
     private static bool IsApproximatelyMagenta(Color color)
     {
-        const int tolerance = 8;
-        return Math.Abs(color.R - 255) <= tolerance
-               && color.G <= tolerance
-               && Math.Abs(color.B - 255) <= tolerance;
+        if (color.A == 0)
+        {
+            return false;
+        }
+
+        const int maxGreen = 48;
+        const int minRedBlue = 180;
+        const int maxDeviation = 80;
+
+        if (color.G > maxGreen)
+        {
+            return false;
+        }
+
+        var redDeviation = Math.Abs(color.R - 255);
+        var blueDeviation = Math.Abs(color.B - 255);
+
+        return color.R >= minRedBlue
+               && color.B >= minRedBlue
+               && redDeviation <= maxDeviation
+               && blueDeviation <= maxDeviation;
+    }
+
+    private static void ApplyMagentaTransparency(Bitmap bitmap)
+    {
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.A == 0)
+                {
+                    continue;
+                }
+
+                if (!IsApproximatelyMagenta(pixel))
+                {
+                    continue;
+                }
+
+                bitmap.SetPixel(x, y, Color.FromArgb(0, pixel.R, pixel.G, pixel.B));
+            }
+        }
     }
 
     private Image? LoadImageFromResources(string fileName, bool treatMagentaAsTransparent = false)
@@ -641,12 +690,23 @@ public partial class MainForm : Form
         try
         {
             var bitmap = new Bitmap(path);
-            if (treatMagentaAsTransparent)
+            if (!treatMagentaAsTransparent)
             {
-                bitmap.MakeTransparent(MagentaColorKey);
+                return bitmap;
             }
 
-            return bitmap;
+            var converted = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format32bppArgb);
+            using (var graphics = Graphics.FromImage(converted))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.DrawImage(bitmap, new Rectangle(0, 0, converted.Width, converted.Height));
+            }
+
+            bitmap.Dispose();
+
+            converted.MakeTransparent(MagentaColorKey);
+            ApplyMagentaTransparency(converted);
+            return converted;
         }
         catch
         {
