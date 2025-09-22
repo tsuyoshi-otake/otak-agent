@@ -362,13 +362,35 @@ public partial class MainForm : Form
             return Task.CompletedTask;
         }
 
-        using var settingsForm = new SettingsForm(_settingsService, _settings);
-        if (settingsForm.ShowDialog(this) == DialogResult.OK)
+        var previousTopMost = TopMost;
+        try
         {
-            _settings = settingsForm.UpdatedSettings;
-            ApplyLocalization();
-            LoadAssets();
-            UpdateTooltips();
+            if (previousTopMost)
+            {
+                TopMost = false;
+            }
+
+            using var settingsForm = new SettingsForm(_settingsService, _settings)
+            {
+                StartPosition = FormStartPosition.CenterParent,
+                TopMost = true
+            };
+
+            if (settingsForm.ShowDialog(this) == DialogResult.OK)
+            {
+                _settings = settingsForm.UpdatedSettings;
+                ApplyLocalization();
+                LoadAssets();
+                UpdateTooltips();
+            }
+        }
+        finally
+        {
+            TopMost = previousTopMost;
+            if (previousTopMost)
+            {
+                Activate();
+            }
         }
 
         return Task.CompletedTask;
@@ -711,9 +733,10 @@ public partial class MainForm : Form
     private string SendText() => _settings.English ? "Send" : "送信";
     private string ContinueText() => _settings.English ? "Continue" : "続ける";
     private string ResetButtonText() => _settings.English ? "Reset" : "リセット";
-    private string OptionsText() => _settings.English ? "Options" : "オプション";
+    private string OptionsText() => _settings.English ? "Settings" : "設定";
     private string ProcessingText() => _settings.English ? "Processing..." : "処理中...";
 }
+
 
 
 
