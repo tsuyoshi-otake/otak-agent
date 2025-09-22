@@ -660,66 +660,11 @@ public partial class MainForm : Form
                && redDeviation <= maxDeviation
                && blueDeviation <= maxDeviation;
     }
-    private static int GetAnimationDurationMilliseconds(Image image)
+        private static int GetAnimationDurationMilliseconds(Image image)
     {
-        if (!ImageAnimator.CanAnimate(image))
-        {
-            return 0;
-        }
-
-        try
-        {
-            var frameDimension = FrameDimension.Time;
-            var frameCount = image.GetFrameCount(frameDimension);
-            if (frameCount <= 0)
-            {
-                return 0;
-            }
-
-            const int propertyTagFrameDelay = 0x5100;
-            var totalDelay = 0;
-            if (image.PropertyIdList is { } propertyIds && Array.IndexOf(propertyIds, propertyTagFrameDelay) >= 0)
-            {
-                try
-                {
-                    var delayItem = image.GetPropertyItem(propertyTagFrameDelay);
-#pragma warning disable CS8602
-                    byte[] delays = delayItem.Value ?? Array.Empty<byte>();
-                    for (var frame = 0; frame < frameCount; frame++)
-                    {
-                        var offset = frame * 4;
-                        if (offset + 4 > delays.Length)
-                        {
-                            break;
-                        }
-
-                        var delay = BitConverter.ToInt32(delays, offset);
-                        if (delay <= 0)
-                        {
-                            delay = 1;
-                        }
-
-                        totalDelay += delay;
-                    }
-                }
-#pragma warning restore CS8602
-                catch
-                {
-                    // Ignore invalid frame delay metadata
-                }
-            }
-            if (totalDelay <= 0)
-            {
-                totalDelay = frameCount;
-            }
-
-            return Math.Max(totalDelay, 1) * 10;
-        }
-        catch
-        {
-            return 0;
-        }
+        return 1200;
     }
+
 
 
     private Image? LoadImageFromResources(string fileName, bool treatMagentaAsTransparent = false)
@@ -769,4 +714,6 @@ public partial class MainForm : Form
     private string OptionsText() => _settings.English ? "Options" : "オプション";
     private string ProcessingText() => _settings.English ? "Processing..." : "処理中...";
 }
+
+
 
