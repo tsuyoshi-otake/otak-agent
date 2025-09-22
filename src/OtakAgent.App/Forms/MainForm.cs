@@ -570,6 +570,18 @@ public partial class MainForm : Form
 
     private static bool HasVisibleContent(Image image)
     {
+        if (ImageAnimator.CanAnimate(image))
+        {
+            try
+            {
+                return image.GetFrameCount(FrameDimension.Time) > 0;
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         const int minAlpha = 32;
         const int fullyOpaqueAlpha = 224;
         const int minFullyOpaquePixels = 200;
@@ -578,6 +590,7 @@ public partial class MainForm : Form
         try
         {
             using var bitmap = new Bitmap(image);
+
             var width = bitmap.Width;
             var height = bitmap.Height;
             var accumulatedAlpha = 0;
