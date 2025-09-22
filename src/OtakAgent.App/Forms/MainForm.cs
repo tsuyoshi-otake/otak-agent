@@ -146,7 +146,16 @@ public partial class MainForm : Form
         var baseImageName = _settings.English ? "clippy" : "kairu";
         _primaryCharacterFrame = LoadImageFromResources($"{baseImageName}_start.gif");
         _secondaryCharacterFrame = LoadImageFromResources($"{baseImageName}.gif");
-        SetCharacterImage(_primaryCharacterFrame);
+
+        var startFrameVisible = _primaryCharacterFrame is not null && HasVisibleContent(_primaryCharacterFrame);
+        if (startFrameVisible)
+        {
+            SetCharacterImage(_primaryCharacterFrame);
+        }
+        else
+        {
+            SetCharacterImage(_secondaryCharacterFrame);
+        }
 
         _bubbleTopImage = LoadImageFromResources("windowTop.png", treatMagentaAsTransparent: true);
         _bubbleCenterImage = LoadImageFromResources("windowCenter.png", treatMagentaAsTransparent: true);
@@ -167,7 +176,7 @@ public partial class MainForm : Form
             }
         }
 
-        if (_secondaryCharacterFrame is not null)
+        if (_secondaryCharacterFrame is not null && startFrameVisible)
         {
             _animationTimer.Interval = 1400;
             _animationTimer.Start();
@@ -571,6 +580,54 @@ public partial class MainForm : Form
                 graphics.DrawImage(tile, destRect, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, GraphicsUnit.Pixel, attributes);
             }
         }
+    }
+
+    private static bool HasVisibleContent(Image image)
+    {
+        try
+        {
+            using var bitmap = new Bitmap(image);
+            var width = bitmap.Width;
+            var height = bitmap.Height;
+            var visiblePixels = 0;
+
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    var pixel = bitmap.GetPixel(x, y);
+                    if (pixel.A < 32)
+                    {
+                        continue;
+                    }
+
+                    if (IsApproximatelyMagenta(pixel))
+                    {
+                        continue;
+                    }
+
+                    visiblePixels++;
+                    if (visiblePixels >= 250)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return visiblePixels > 0;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private static bool IsApproximatelyMagenta(Color color)
+    {
+        const int tolerance = 8;
+        return Math.Abs(color.R - 255) <= tolerance
+               && color.G <= tolerance
+               && Math.Abs(color.B - 255) <= tolerance;
     }
 
     private Image? LoadImageFromResources(string fileName, bool treatMagentaAsTransparent = false)
