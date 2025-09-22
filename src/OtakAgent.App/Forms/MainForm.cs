@@ -153,7 +153,7 @@ public partial class MainForm : Form
         }
         else
         {
-            SetCharacterImage(_secondaryCharacterFrame);
+            SetCharacterImage(_secondaryCharacterFrame); // ensure fallback when start gif invisible
         }
 
         _bubbleTopImage = LoadImageFromResources("windowTop.png", treatMagentaAsTransparent: true);
@@ -180,6 +180,10 @@ public partial class MainForm : Form
             var animationDuration = GetAnimationDurationMilliseconds(_primaryCharacterFrame!);
             _animationTimer.Interval = animationDuration > 0 ? animationDuration : 1400;
             _animationTimer.Start();
+        }
+        else if (_secondaryCharacterFrame is not null)
+        {
+            SetCharacterImage(_secondaryCharacterFrame);
         }
 
         ApplyBubbleLayout();
