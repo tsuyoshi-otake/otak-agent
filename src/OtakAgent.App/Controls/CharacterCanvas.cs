@@ -8,6 +8,7 @@ namespace OtakAgent.App.Controls;
 
 internal sealed class CharacterCanvas : Control
 {
+    private static readonly Color TransparentFillColor = Color.Magenta;
     private Image? _image;
 
     public CharacterCanvas()
@@ -17,7 +18,7 @@ internal sealed class CharacterCanvas : Control
                  ControlStyles.OptimizedDoubleBuffer |
                  ControlStyles.ResizeRedraw |
                  ControlStyles.SupportsTransparentBackColor, true);
-        BackColor = Color.Transparent;
+        BackColor = TransparentFillColor;
     }
 
     [Browsable(false)]
@@ -37,6 +38,12 @@ internal sealed class CharacterCanvas : Control
         }
     }
 
+    protected override void OnPaintBackground(PaintEventArgs pevent)
+    {
+        var graphics = pevent.Graphics;
+        graphics.Clear(TransparentFillColor);
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
@@ -48,7 +55,6 @@ internal sealed class CharacterCanvas : Control
         }
 
         var graphics = e.Graphics;
-        graphics.Clear(Color.Transparent);
         graphics.CompositingMode = CompositingMode.SourceOver;
         graphics.CompositingQuality = CompositingQuality.HighQuality;
         graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
@@ -104,6 +110,7 @@ internal sealed class CharacterCanvas : Control
         return new Rectangle(offsetX, offsetY, width, height);
     }
 }
+
 
 
 
