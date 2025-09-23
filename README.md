@@ -75,6 +75,38 @@ Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinFo
   - Store icons (Square, Wide, Splash Screen)
   - Application resources (GIFs, WAVs, PNGs)
 
+### MSIX Package Status and Conclusion
+
+#### Current Status
+1. **Build with .NET 10 RC1** ✅ Successful
+   - Application builds and runs correctly
+   - Works without issues in development environment
+
+2. **MSIX Package Creation** ✅ Successful
+   - Successfully packaged using makeappx.exe
+   - Files ready for Store submission
+
+3. **Local Installation** ❌ Certificate Error (0x80073D2C)
+   - Error: "Cannot verify publisher certificate for this app package"
+   - Issue persists even with:
+     - Developer Mode enabled
+     - Self-signed certificates
+     - Testing with .NET 9 (same error)
+
+#### Conclusion
+- **Microsoft Store Submission**: ✅ Ready
+  - Unsigned packages can be submitted to Store
+  - Microsoft automatically handles signing during publication
+  - Package `OtakAgent.msix` is ready for upload
+
+- **Local Testing**: ❌ Limited
+  - Cannot install locally due to certificate validation requirements
+  - Pre-submission testing must be done in development environment using `dotnet run`
+  - This is a known limitation for unsigned MSIX packages
+
+#### Note
+The certificate error (0x80073D2C) during local installation does not affect Microsoft Store distribution. Once the package is submitted and signed by Microsoft, users will be able to install it normally through the Store.
+
 ## Configuration
 - Settings live beside the executable in `agenttalk.settings.json` and are managed by `SettingsService` in `OtakAgent.Core`.
 - On first launch, `IniSettingsImporter` migrates legacy `agenttalk.ini` and `SystemPrompt.ini` when detected.
