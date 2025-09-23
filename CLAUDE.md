@@ -107,6 +107,24 @@ Store assets are located in `OtakAgent.Package/Images/` for MSIX packaging:
 
 Use `generate-assets.ps1` script to regenerate these assets from base icon.
 
+### MSIX Packaging and Microsoft Store Distribution
+The `OtakAgent.Package/` directory contains the Windows Application Packaging Project for creating MSIX packages:
+- **OtakAgent.Package.wapproj** - Packaging project file for Visual Studio
+- **Package.appxmanifest** - Application manifest defining app identity, capabilities, and visual elements
+- **create-certificate.ps1** - Script to generate self-signed certificate for package signing
+- **generate-assets.ps1** - Script to generate Store icons from base image
+
+To build MSIX package:
+1. Run `create-certificate.ps1` to create signing certificate
+2. Open solution in Visual Studio 2022 and build OtakAgent.Package project
+3. Or use MSBuild: `msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release`
+
+For Microsoft Store submission:
+- Upload the generated MSIX package to Partner Center
+- Package supports x64, x86, and ARM64 architectures
+- Requires Windows 11 version 22621.0 or higher
+- See `README_MSIX.md` for detailed Store submission guide
+
 ### Japanese Language Support
 The application supports bilingual personalities (Japanese/English) and uses System.Globalization for locale detection. UI strings are currently hardcoded but prepared for localization.
 
