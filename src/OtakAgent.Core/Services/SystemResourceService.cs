@@ -30,13 +30,39 @@ namespace OtakAgent.Core.Services
     public class SystemResourceService : ISystemResourceService, IDisposable
     {
         private readonly PerformanceCounter _cpuCounter;
+        private readonly object _lock = new object();
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _monitoringTask;
+        private bool _disposed;
 
-        public double CpuUsage { get; private set; }
-        public double MemoryUsagePercentage { get; private set; }
-        public long MemoryUsedMB { get; private set; }
-        public long MemoryTotalMB { get; private set; }
+        private double _cpuUsage;
+        private double _memoryUsagePercentage;
+        private long _memoryUsedMB;
+        private long _memoryTotalMB;
+
+        public double CpuUsage
+        {
+            get { lock (_lock) { return _cpuUsage; } }
+            private set { lock (_lock) { _cpuUsage = value; } }
+        }
+
+        public double MemoryUsagePercentage
+        {
+            get { lock (_lock) { return _memoryUsagePercentage; } }
+            private set { lock (_lock) { _memoryUsagePercentage = value; } }
+        }
+
+        public long MemoryUsedMB
+        {
+            get { lock (_lock) { return _memoryUsedMB; } }
+            private set { lock (_lock) { _memoryUsedMB = value; } }
+        }
+
+        public long MemoryTotalMB
+        {
+            get { lock (_lock) { return _memoryTotalMB; } }
+            private set { lock (_lock) { _memoryTotalMB = value; } }
+        }
 
         public event EventHandler<ResourceUpdateEventArgs>? ResourcesUpdated;
 
@@ -47,44 +73,67 @@ namespace OtakAgent.Core.Services
                 _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
                 _cpuCounter.NextValue(); // Initialize
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
-                throw;
+                throw new InvalidOperationException("Failed to initialize CPU performance counter. Ensure performance counters are enabled.", ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new UnauthorizedAccessException("Access denied to performance counters. Run as administrator or grant necessary permissions.", ex);
             }
         }
 
         public void StartMonitoring()
         {
-            if (_monitoringTask != null && !_monitoringTask.IsCompleted)
-                return;
+            lock (_lock)
+            {
+                if (_monitoringTask != null && !_monitoringTask.IsCompleted)
+                    return;
 
-            _cancellationTokenSource = new CancellationTokenSource();
-            _monitoringTask = Task.Run(async () => await MonitorResourcesAsync(_cancellationTokenSource.Token));
+                _cancellationTokenSource = new CancellationTokenSource();
+                _monitoringTask = Task.Run(async () => await MonitorResourcesAsync(_cancellationTokenSource.Token).ConfigureAwait(false));
+            }
         }
 
         public void StopMonitoring()
         {
-            _cancellationTokenSource?.Cancel();
-            try
-            {
-                _monitoringTask?.Wait(TimeSpan.FromSeconds(2));
-            }
-            catch (AggregateException) { }
+            CancellationTokenSource? cts;
+            Task? task;
 
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-            _monitoringTask = null;
+            lock (_lock)
+            {
+                cts = _cancellationTokenSource;
+                task = _monitoringTask;
+                _cancellationTokenSource = null;
+                _monitoringTask = null;
+            }
+
+            if (cts != null)
+            {
+                cts.Cancel();
+                try
+                {
+                    task?.Wait(TimeSpan.FromSeconds(2));
+                }
+                catch (AggregateException)
+                {
+                    // Expected when task is cancelled
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
+            }
         }
 
         private async Task MonitorResourcesAsync(CancellationToken cancellationToken)
         {
-
             try
             {
                 // First CPU reading is always 0, so wait and discard it
-                await Task.Delay(100, cancellationToken);
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                 _cpuCounter.NextValue();
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -96,17 +145,23 @@ namespace OtakAgent.Core.Services
                         // Get memory information
                         UpdateMemoryInfo();
 
-
-                        // Raise event
-                        ResourcesUpdated?.Invoke(this, new ResourceUpdateEventArgs
+                        // Raise event (thread-safe)
+                        var handler = ResourcesUpdated;
+                        if (handler != null)
                         {
-                            CpuUsage = CpuUsage,
-                            MemoryUsagePercentage = MemoryUsagePercentage,
-                            MemoryUsedMB = MemoryUsedMB,
-                            MemoryTotalMB = MemoryTotalMB
-                        });
+                            var args = new ResourceUpdateEventArgs
+                            {
+                                CpuUsage = CpuUsage,
+                                MemoryUsagePercentage = MemoryUsagePercentage,
+                                MemoryUsedMB = MemoryUsedMB,
+                                MemoryTotalMB = MemoryTotalMB
+                            };
 
-                        await Task.Delay(1000, cancellationToken); // Update every second
+                            // Invoke on ThreadPool to avoid blocking
+                            _ = Task.Run(() => handler.Invoke(this, args), CancellationToken.None);
+                        }
+
+                        await Task.Delay(1000, cancellationToken).ConfigureAwait(false); // Update every second
                     }
                     catch (TaskCanceledException)
                     {
@@ -115,9 +170,13 @@ namespace OtakAgent.Core.Services
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"Resource monitoring error: {ex.Message}");
-                        await Task.Delay(5000, cancellationToken); // Wait longer on error
+                        await Task.Delay(5000, cancellationToken).ConfigureAwait(false); // Wait longer on error
                     }
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                // Expected during shutdown
             }
             catch (Exception ex)
             {
@@ -134,20 +193,23 @@ namespace OtakAgent.Core.Services
 
                 foreach (ManagementObject mo in collection)
                 {
-                    if (mo["TotalVisibleMemorySize"] != null && mo["FreePhysicalMemory"] != null)
+                    using (mo)
                     {
-                        var totalKB = Convert.ToUInt64(mo["TotalVisibleMemorySize"]);
-                        var freeKB = Convert.ToUInt64(mo["FreePhysicalMemory"]);
+                        if (mo["TotalVisibleMemorySize"] != null && mo["FreePhysicalMemory"] != null)
+                        {
+                            var totalKB = Convert.ToUInt64(mo["TotalVisibleMemorySize"]);
+                            var freeKB = Convert.ToUInt64(mo["FreePhysicalMemory"]);
 
-                        MemoryTotalMB = (long)(totalKB / 1024);
-                        var freeMB = (long)(freeKB / 1024);
-                        MemoryUsedMB = MemoryTotalMB - freeMB;
+                            MemoryTotalMB = (long)(totalKB / 1024);
+                            var freeMB = (long)(freeKB / 1024);
+                            MemoryUsedMB = MemoryTotalMB - freeMB;
 
-                        MemoryUsagePercentage = MemoryTotalMB > 0
-                            ? Math.Round((double)MemoryUsedMB / MemoryTotalMB * 100, 1)
-                            : 0;
+                            MemoryUsagePercentage = MemoryTotalMB > 0
+                                ? Math.Round((double)MemoryUsedMB / MemoryTotalMB * 100, 1)
+                                : 0;
 
-                        break;
+                            break;
+                        }
                     }
                 }
 
@@ -155,7 +217,6 @@ namespace OtakAgent.Core.Services
                 if (MemoryTotalMB == 0)
                 {
                     using var process = Process.GetCurrentProcess();
-                    var totalMemory = GC.GetTotalMemory(false);
 
                     // Get available physical memory using PerformanceCounter
                     try
@@ -174,11 +235,10 @@ namespace OtakAgent.Core.Services
                         {
                             MemoryUsagePercentage = Math.Round((double)MemoryUsedMB / MemoryTotalMB * 100, 1);
                         }
-
                     }
-                    catch (Exception ex2)
+                    catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Memory counter error: {ex2.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Memory counter error: {ex.Message}");
                     }
                 }
             }
@@ -190,8 +250,21 @@ namespace OtakAgent.Core.Services
 
         public void Dispose()
         {
-            StopMonitoring();
-            _cpuCounter?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    StopMonitoring();
+                    _cpuCounter?.Dispose();
+                }
+                _disposed = true;
+            }
         }
     }
 }

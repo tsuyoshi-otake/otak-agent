@@ -43,20 +43,31 @@ public sealed class ChatService
 
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", request.Settings.ApiKey);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        // Set timeout for HTTP request
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-        var completion = await JsonSerializer.DeserializeAsync<ChatCompletionResponse>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false)
-                        ?? throw new InvalidOperationException("Failed to deserialize chat completion response.");
-
-        var message = completion.Choices.FirstOrDefault()?.Message;
-        if (message == null)
+        try
         {
-            throw new InvalidOperationException("Chat completion response did not include any message choices.");
-        }
+            using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, linkedCts.Token).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
 
-        return message.Content;
+            await using var stream = await response.Content.ReadAsStreamAsync(linkedCts.Token).ConfigureAwait(false);
+            var completion = await JsonSerializer.DeserializeAsync<ChatCompletionResponse>(stream, _jsonOptions, linkedCts.Token).ConfigureAwait(false)
+                            ?? throw new InvalidOperationException("Failed to deserialize chat completion response.");
+
+            var message = completion.Choices.FirstOrDefault()?.Message;
+            if (message == null)
+            {
+                throw new InvalidOperationException("Chat completion response did not include any message choices.");
+            }
+
+            return message.Content;
+        }
+        catch (TaskCanceledException) when (timeoutCts.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Chat API request timed out after 30 seconds.");
+        }
     }
 
     private static ChatCompletionRequest BuildPayload(ChatRequest request)

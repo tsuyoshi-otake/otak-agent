@@ -379,8 +379,21 @@ public partial class MainForm : Form
         try
         {
             BeginProcessing();
-            _inputTextBox.ReadOnly = true;
-            _inputTextBox.BackColor = Color.FromArgb(255, 255, 206);
+
+            // Update UI on UI thread
+            if (InvokeRequired)
+            {
+                Invoke(() =>
+                {
+                    _inputTextBox.ReadOnly = true;
+                    _inputTextBox.BackColor = Color.FromArgb(255, 255, 206);
+                });
+            }
+            else
+            {
+                _inputTextBox.ReadOnly = true;
+                _inputTextBox.BackColor = Color.FromArgb(255, 255, 206);
+            }
 
             var historySnapshot = _history.ToList();
             var systemPrompt = _personalityPromptBuilder.Build(_settings);
@@ -395,34 +408,131 @@ public partial class MainForm : Form
                 historySnapshot,
                 systemPrompt)).ConfigureAwait(false);
 
+            // Limit history size to prevent unbounded growth
+            const int maxHistoryItems = 100;
+            if (_history.Count >= maxHistoryItems)
+            {
+                _history.RemoveRange(0, _history.Count - maxHistoryItems + 2);
+            }
+
             _history.Add(new ChatMessage("user", question));
             _history.Add(new ChatMessage("assistant", response));
 
-            _promptLabel.Text = _settings.English ? "Here is the response!" : "回答が届いたよ！";
-            _inputTextBox.Text = response;
-            _sendButton.Text = ContinueText();
-            _secondaryButton.Text = ResetButtonText();
-            UpdateTooltips();
+            // Update UI on UI thread
+            if (InvokeRequired)
+            {
+                Invoke(() =>
+                {
+                    _promptLabel.Text = _settings.English ? "Here is the response!" : "回答が届いたよ！";
+                    _inputTextBox.Text = response;
+                    _sendButton.Text = ContinueText();
+                    _secondaryButton.Text = ResetButtonText();
+                    UpdateTooltips();
+                });
+            }
+            else
+            {
+                _promptLabel.Text = _settings.English ? "Here is the response!" : "回答が届いたよ！";
+                _inputTextBox.Text = response;
+                _sendButton.Text = ContinueText();
+                _secondaryButton.Text = ResetButtonText();
+                UpdateTooltips();
+            }
 
             if (_settings.AutoCopyToClipboard && !string.IsNullOrEmpty(response))
             {
-                TryCopyToClipboard(response);
+                if (InvokeRequired)
+                {
+                    Invoke(() => TryCopyToClipboard(response));
+                }
+                else
+                {
+                    TryCopyToClipboard(response);
+                }
             }
 
             _settings.LastUserMessage = question;
             await _settingsService.SaveAsync(_settings).ConfigureAwait(false);
         }
+        catch (HttpRequestException ex)
+        {
+            // Network-related errors
+            if (InvokeRequired)
+            {
+                Invoke(() =>
+                {
+                    _promptLabel.Text = _settings.English ? "Network error occurred." : "ネットワークエラーが発生しました。";
+                    _inputTextBox.ReadOnly = false;
+                    _inputTextBox.BackColor = Color.White;
+                    MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    EnterInputMode(clearText: false);
+                });
+            }
+            else
+            {
+                _promptLabel.Text = _settings.English ? "Network error occurred." : "ネットワークエラーが発生しました。";
+                _inputTextBox.ReadOnly = false;
+                _inputTextBox.BackColor = Color.White;
+                MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                EnterInputMode(clearText: false);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Configuration errors
+            if (InvokeRequired)
+            {
+                Invoke(() =>
+                {
+                    _promptLabel.Text = _settings.English ? "Configuration error." : "設定エラーです。";
+                    _inputTextBox.ReadOnly = false;
+                    _inputTextBox.BackColor = Color.White;
+                    MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    EnterInputMode(clearText: false);
+                });
+            }
+            else
+            {
+                _promptLabel.Text = _settings.English ? "Configuration error." : "設定エラーです。";
+                _inputTextBox.ReadOnly = false;
+                _inputTextBox.BackColor = Color.White;
+                MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                EnterInputMode(clearText: false);
+            }
+        }
         catch (Exception ex)
         {
-            _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
-            _inputTextBox.ReadOnly = false;
-            _inputTextBox.BackColor = Color.White;
-            MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            EnterInputMode(clearText: false);
+            // Other errors
+            if (InvokeRequired)
+            {
+                Invoke(() =>
+                {
+                    _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
+                    _inputTextBox.ReadOnly = false;
+                    _inputTextBox.BackColor = Color.White;
+                    MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    EnterInputMode(clearText: false);
+                });
+            }
+            else
+            {
+                _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
+                _inputTextBox.ReadOnly = false;
+                _inputTextBox.BackColor = Color.White;
+                MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                EnterInputMode(clearText: false);
+            }
         }
         finally
         {
-            EndProcessing();
+            if (InvokeRequired)
+            {
+                Invoke(() => EndProcessing());
+            }
+            else
+            {
+                EndProcessing();
+            }
         }
     }
 
@@ -604,9 +714,9 @@ public partial class MainForm : Form
 
     private void OnSystemResourcesUpdated(object? sender, ResourceUpdateEventArgs e)
     {
-        // This event is raised from the resource service when new data is available
+        // This event is raised from the resource service background thread
         // The timer tick will handle the tooltip update to avoid duplicate updates
-        // Do nothing here to prevent update flooding
+        // Do nothing here to prevent update flooding and thread issues
     }
 
     private void UpdateSystemTrayTooltip()
