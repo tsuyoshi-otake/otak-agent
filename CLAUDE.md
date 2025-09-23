@@ -94,6 +94,19 @@ The application uses constructor dependency injection with these core services:
 ### Asset Management
 GIF/PNG/WAV resources are currently in `src/OtakAgent.App/Resources/` and copied to output on build. The magenta color key (RGB 255,0,255) is used for transparency.
 
+### Microsoft Store Assets
+Store assets are located in `OtakAgent.Package/Images/` for MSIX packaging:
+- **Square150x150Logo.png** - Medium tile (150x150)
+- **Square44x44Logo.png** - Small app icon (44x44)
+- **Square44x44Logo.targetsize-24_altform-unplated.png** - Taskbar icon (24x24)
+- **Wide310x150Logo.png** - Wide tile (310x150)
+- **SmallTile.png** - Small tile (71x71)
+- **LargeTile.png** - Large tile (310x310)
+- **StoreLogo.png** - Store listing logo (50x50)
+- **SplashScreen.png** - App splash screen (620x300)
+
+Use `generate-assets.ps1` script to regenerate these assets from base icon.
+
 ### Japanese Language Support
 The application supports bilingual personalities (Japanese/English) and uses System.Globalization for locale detection. UI strings are currently hardcoded but prepared for localization.
 
