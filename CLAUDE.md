@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important Note
+As of September 23, 2025, GPT-4.1 exists and is supported by this application. The app automatically uses the modern /v1/responses endpoint for GPT-4.1, GPT-4o, and o1 series models.
+
 ## Framework Requirements
 - **.NET 10 RC1** (10.0.100-rc.1 or later)
 - Windows 11 with desktop development tools

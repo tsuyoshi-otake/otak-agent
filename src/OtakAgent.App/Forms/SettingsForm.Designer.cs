@@ -14,6 +14,7 @@ partial class SettingsForm
     private CheckBox _autoCopyCheckBox = null!;
     private CheckBox _historyCheckBox = null!;
     private CheckBox _hotkeyCheckBox = null!;
+    private CheckBox _webSearchCheckBox = null!;
     private TextBox _hostTextBox = null!;
     private TextBox _endpointTextBox = null!;
     private TextBox _apiKeyTextBox = null!;
@@ -23,6 +24,7 @@ partial class SettingsForm
     private NumericUpDown _hotkeyIntervalNumeric = null!;
     private Button _saveButton = null!;
     private Button _cancelButton = null!;
+    private Button _resetDefaultsButton = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -42,6 +44,7 @@ partial class SettingsForm
         _autoCopyCheckBox = new CheckBox();
         _historyCheckBox = new CheckBox();
         _hotkeyCheckBox = new CheckBox();
+        _webSearchCheckBox = new CheckBox();
         _hostTextBox = new TextBox();
         _endpointTextBox = new TextBox();
         _apiKeyTextBox = new TextBox();
@@ -51,6 +54,7 @@ partial class SettingsForm
         _hotkeyIntervalNumeric = new NumericUpDown();
         _saveButton = new Button();
         _cancelButton = new Button();
+        _resetDefaultsButton = new Button();
         ((ISupportInitialize)_hotkeyIntervalNumeric).BeginInit();
         SuspendLayout();
         _englishCheckBox.AutoSize = true;
@@ -95,6 +99,13 @@ partial class SettingsForm
         _hotkeyCheckBox.TabIndex = 5;
         _hotkeyCheckBox.Text = "Enable double Ctrl+C clipboard hotkey";
         _hotkeyCheckBox.UseVisualStyleBackColor = true;
+        _webSearchCheckBox.AutoSize = true;
+        _webSearchCheckBox.Location = new Point(18, 168);
+        _webSearchCheckBox.Name = "_webSearchCheckBox";
+        _webSearchCheckBox.Size = new Size(120, 19);
+        _webSearchCheckBox.TabIndex = 6;
+        _webSearchCheckBox.Text = "Enable Web Search";
+        _webSearchCheckBox.UseVisualStyleBackColor = true;
         _hotkeyIntervalNumeric.Increment = new decimal(new int[] { 50, 0, 0, 0 });
         _hotkeyIntervalNumeric.Location = new Point(280, 141);
         _hotkeyIntervalNumeric.Maximum = new decimal(new int[] { 2000, 0, 0, 0 });
@@ -138,16 +149,22 @@ partial class SettingsForm
         _systemPromptTextBox.ScrollBars = ScrollBars.Vertical;
         _systemPromptTextBox.Size = new Size(342, 96);
         _systemPromptTextBox.TabIndex = 12;
+        _resetDefaultsButton.Location = new Point(16, 522);
+        _resetDefaultsButton.Name = "_resetDefaultsButton";
+        _resetDefaultsButton.Size = new Size(100, 32);
+        _resetDefaultsButton.TabIndex = 13;
+        _resetDefaultsButton.Text = "Reset to Defaults";
+        _resetDefaultsButton.UseVisualStyleBackColor = true;
         _saveButton.Location = new Point(198, 522);
         _saveButton.Name = "_saveButton";
         _saveButton.Size = new Size(80, 32);
-        _saveButton.TabIndex = 13;
+        _saveButton.TabIndex = 14;
         _saveButton.Text = "Save";
         _saveButton.UseVisualStyleBackColor = true;
         _cancelButton.Location = new Point(280, 522);
         _cancelButton.Name = "_cancelButton";
         _cancelButton.Size = new Size(80, 32);
-        _cancelButton.TabIndex = 14;
+        _cancelButton.TabIndex = 15;
         _cancelButton.Text = "Cancel";
         _cancelButton.UseVisualStyleBackColor = true;
         AutoScaleDimensions = new SizeF(7F, 15F);
@@ -155,6 +172,7 @@ partial class SettingsForm
         ClientSize = new Size(382, 566);
         Controls.Add(_cancelButton);
         Controls.Add(_saveButton);
+        Controls.Add(_resetDefaultsButton);
         Controls.Add(_systemPromptTextBox);
         Controls.Add(_personalityOverrideTextBox);
         Controls.Add(_modelTextBox);
@@ -162,6 +180,7 @@ partial class SettingsForm
         Controls.Add(_endpointTextBox);
         Controls.Add(_hostTextBox);
         Controls.Add(_hotkeyIntervalNumeric);
+        Controls.Add(_webSearchCheckBox);
         Controls.Add(_hotkeyCheckBox);
         Controls.Add(_historyCheckBox);
         Controls.Add(_autoCopyCheckBox);

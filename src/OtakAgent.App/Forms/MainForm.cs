@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Media;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using OtakAgent.Core.Chat;
@@ -19,9 +20,11 @@ public partial class MainForm : Form
 {
     private readonly SettingsService _settingsService;
     private readonly ChatService _chatService;
+    private readonly ModernChatService _modernChatService;
     private readonly PersonalityPromptBuilder _personalityPromptBuilder;
     private readonly ISystemResourceService _systemResourceService;
     private readonly List<ChatMessage> _history = new();
+    private const int MaxHistoryItems = 100; // Prevent unbounded growth
     private readonly System.Windows.Forms.Timer _animationTimer;
     private readonly System.Windows.Forms.Timer _resourceUpdateTimer;
 
@@ -43,10 +46,11 @@ public partial class MainForm : Form
 
     private bool _isPlaceholderActive;
 
-    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService)
+    public MainForm(SettingsService settingsService, ChatService chatService, ModernChatService modernChatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService)
     {
         _settingsService = settingsService;
         _chatService = chatService;
+        _modernChatService = modernChatService;
         _personalityPromptBuilder = personalityPromptBuilder;
         _systemResourceService = systemResourceService;
 
@@ -89,19 +93,42 @@ public partial class MainForm : Form
 
     private async Task InitializeAsync()
     {
-        _settings = await _settingsService.LoadAsync().ConfigureAwait(false);
-        ApplyLocalization();
-        LoadAssets();
-        PositionWindow();
-        PositionCharacter();
-        UpdateTooltips();
+        try
+        {
+            _settings = await _settingsService.LoadAsync().ConfigureAwait(false);
 
-        // Start resource monitoring
-        _systemResourceService.StartMonitoring();
-        _resourceUpdateTimer.Start();
+            // Run UI updates on UI thread
+            if (InvokeRequired)
+            {
+                Invoke(() =>
+                {
+                    ApplyLocalization();
+                    LoadAssets();
+                    PositionWindow();
+                    PositionCharacter();
+                    UpdateTooltips();
+                });
+            }
+            else
+            {
+                ApplyLocalization();
+                LoadAssets();
+                PositionWindow();
+                PositionCharacter();
+                UpdateTooltips();
+            }
 
-        // Set initial tooltip with resource info
-        UpdateSystemTrayTooltip();
+            // Start resource monitoring
+            _systemResourceService.StartMonitoring();
+            _resourceUpdateTimer.Start();
+
+            // Set initial tooltip with resource info
+            UpdateSystemTrayTooltip();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Initialization error: {ex.Message}");
+        }
     }
 
     private void ApplyLocalization()
@@ -271,11 +298,7 @@ public partial class MainForm : Form
         using var attributes = new ImageAttributes();
         attributes.SetColorKey(MagentaColorKey, MagentaColorKey);
 
-        const int topOffset = 0;
-        const int bottomOffset = 0;
-
         var topCrop = 0;
-        var bottomCrop = 0;
 
         var topSrcHeight = _bubbleTopImage.Height;
         var bottomSrcHeight = _bubbleBottomImage.Height;
@@ -402,11 +425,37 @@ public partial class MainForm : Form
                 systemPrompt = null;
             }
 
-            var response = await _chatService.SendAsync(new ChatRequest(
-                _settings,
-                question,
-                historySnapshot,
-                systemPrompt)).ConfigureAwait(false);
+            // Use ModernChatService for models that support the new endpoint
+            string response;
+
+            // Use cancellation token with timeout to prevent freezing
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+            try
+            {
+                if (ShouldUseModernService(_settings.Model))
+                {
+                    response = await _modernChatService.SendAsync(new ChatRequest(
+                        _settings,
+                        question,
+                        historySnapshot,
+                        systemPrompt), cts.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    response = await _chatService.SendAsync(new ChatRequest(
+                        _settings,
+                        question,
+                        historySnapshot,
+                        systemPrompt), cts.Token).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                response = _settings.English
+                    ? "Request timed out. Please check your internet connection and try again."
+                    : "リクエストがタイムアウトしました。インターネット接続を確認してもう一度お試しください。";
+            }
 
             // Limit history size to prevent unbounded growth
             const int maxHistoryItems = 100;
@@ -464,7 +513,7 @@ public partial class MainForm : Form
                     _promptLabel.Text = _settings.English ? "Network error occurred." : "ネットワークエラーが発生しました。";
                     _inputTextBox.ReadOnly = false;
                     _inputTextBox.BackColor = Color.White;
-                    MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    BeginInvoke(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
                     EnterInputMode(clearText: false);
                 });
             }
@@ -473,7 +522,7 @@ public partial class MainForm : Form
                 _promptLabel.Text = _settings.English ? "Network error occurred." : "ネットワークエラーが発生しました。";
                 _inputTextBox.ReadOnly = false;
                 _inputTextBox.BackColor = Color.White;
-                MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Task.Run(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
                 EnterInputMode(clearText: false);
             }
         }
@@ -487,7 +536,7 @@ public partial class MainForm : Form
                     _promptLabel.Text = _settings.English ? "Configuration error." : "設定エラーです。";
                     _inputTextBox.ReadOnly = false;
                     _inputTextBox.BackColor = Color.White;
-                    MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    BeginInvoke(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning));
                     EnterInputMode(clearText: false);
                 });
             }
@@ -496,7 +545,7 @@ public partial class MainForm : Form
                 _promptLabel.Text = _settings.English ? "Configuration error." : "設定エラーです。";
                 _inputTextBox.ReadOnly = false;
                 _inputTextBox.BackColor = Color.White;
-                MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Task.Run(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning));
                 EnterInputMode(clearText: false);
             }
         }
@@ -510,7 +559,7 @@ public partial class MainForm : Form
                     _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
                     _inputTextBox.ReadOnly = false;
                     _inputTextBox.BackColor = Color.White;
-                    MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    BeginInvoke(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
                     EnterInputMode(clearText: false);
                 });
             }
@@ -519,7 +568,7 @@ public partial class MainForm : Form
                 _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
                 _inputTextBox.ReadOnly = false;
                 _inputTextBox.BackColor = Color.White;
-                MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Task.Run(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
                 EnterInputMode(clearText: false);
             }
         }
@@ -536,20 +585,36 @@ public partial class MainForm : Form
         }
     }
 
-    private Task HandleSecondaryButtonClickAsync()
+    private async Task HandleSecondaryButtonClickAsync()
     {
         if (_isProcessing)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         if (_secondaryButton.Text == ResetButtonText())
         {
             _history.Clear();
             EnterInputMode(clearText: true);
-            return Task.CompletedTask;
+            return;
         }
 
+        // Show settings dialog on a background task to avoid blocking UI
+        await Task.Run(() =>
+        {
+            if (InvokeRequired)
+            {
+                Invoke(() => ShowSettingsDialogSync());
+            }
+            else
+            {
+                ShowSettingsDialogSync();
+            }
+        }).ConfigureAwait(false);
+    }
+
+    private void ShowSettingsDialogSync()
+    {
         var previousTopMost = TopMost;
         try
         {
@@ -564,7 +629,8 @@ public partial class MainForm : Form
                 TopMost = true
             };
 
-            if (settingsForm.ShowDialog(this) == DialogResult.OK)
+            var result = settingsForm.ShowDialog(this);
+            if (result == DialogResult.OK)
             {
                 _settings = settingsForm.UpdatedSettings;
                 ApplyLocalization();
@@ -580,8 +646,6 @@ public partial class MainForm : Form
                 Activate();
             }
         }
-
-        return Task.CompletedTask;
     }
 
     private void EnterInputMode(bool clearText)
@@ -996,6 +1060,15 @@ public partial class MainForm : Form
     private string ResetButtonText() => _settings.English ? "Reset" : "リセット";
     private string OptionsText() => _settings.English ? "Settings" : "設定";
     private string ProcessingText() => _settings.English ? "Processing..." : "処理中...";
+
+    private bool ShouldUseModernService(string model)
+    {
+        // Use modern endpoint for newer models
+        return model.Contains("gpt-4o", StringComparison.OrdinalIgnoreCase) ||
+               model.Contains("o1", StringComparison.OrdinalIgnoreCase) ||
+               model.Contains("gpt-4.1", StringComparison.OrdinalIgnoreCase) ||
+               model.Contains("gpt-4-", StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 

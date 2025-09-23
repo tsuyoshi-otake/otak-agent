@@ -12,10 +12,10 @@ namespace OtakAgent.Core.Validation
         private static readonly HashSet<string> ValidModels = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             // OpenAI models
-            "gpt-4", "gpt-4-turbo", "gpt-4-turbo-preview", "gpt-4o", "gpt-4o-mini",
+            "gpt-4", "gpt-4-turbo", "gpt-4-turbo-preview", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini",
             "gpt-3.5-turbo", "gpt-3.5-turbo-16k",
             // Claude models (for Anthropic API)
-            "claude-3-opus", "claude-3-sonnet", "claude-3-haiku",
+            "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", "claude-3-5-sonnet",
             "claude-2.1", "claude-2", "claude-instant",
             // Allow custom models with specific prefixes
             "custom-", "local-", "test-"
