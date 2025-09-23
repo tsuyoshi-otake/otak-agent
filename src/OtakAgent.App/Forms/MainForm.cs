@@ -131,15 +131,24 @@ public partial class MainForm : Form
             // Keep bubble panel at same position - don't move it up
             buttonY = 32 + textBoxHeight + 9; // Position buttons below expanded textbox with proper spacing
             
-            // Resize the form and adjust position to expand upwards
-            var currentLocation = Location;
-            Size = new Size(310, formHeight);
-            Location = new Point(currentLocation.X, currentLocation.Y - expansionAmount);
+            // Only adjust position if we're not already expanded
+            if (Size.Height != formHeight)
+            {
+                var currentLocation = Location;
+                Size = new Size(310, formHeight);
+                Location = new Point(currentLocation.X, currentLocation.Y - expansionAmount);
+            }
         }
         else
         {
-            // Reset to default size and position
-            Size = new Size(310, defaultFormHeight);
+            // Only adjust position if we're currently expanded
+            if (Size.Height != defaultFormHeight)
+            {
+                int expansionAmount = (59 * 5) - 59; // Amount to move back down
+                var currentLocation = Location;
+                Size = new Size(310, defaultFormHeight);
+                Location = new Point(currentLocation.X, currentLocation.Y + expansionAmount);
+            }
         }
         
         _bubblePanel.Location = new Point(44, bubblePanelY);
