@@ -598,31 +598,15 @@ public partial class MainForm : Form
 
     private void OnResourceUpdateTimerTick(object? sender, EventArgs e)
     {
-        Console.WriteLine("OnResourceUpdateTimerTick called");
-
-        // Ensure we're on the UI thread
-        if (InvokeRequired)
-        {
-            BeginInvoke(() => UpdateSystemTrayTooltip());
-        }
-        else
-        {
-            UpdateSystemTrayTooltip();
-        }
+        // Timer tick is already on UI thread, no need for Invoke
+        UpdateSystemTrayTooltip();
     }
 
     private void OnSystemResourcesUpdated(object? sender, ResourceUpdateEventArgs e)
     {
         // This event is raised from the resource service when new data is available
-        // Update tooltip immediately when new data arrives
-        if (InvokeRequired)
-        {
-            BeginInvoke(() => UpdateSystemTrayTooltip());
-        }
-        else
-        {
-            UpdateSystemTrayTooltip();
-        }
+        // The timer tick will handle the tooltip update to avoid duplicate updates
+        // Do nothing here to prevent update flooding
     }
 
     private void UpdateSystemTrayTooltip()
@@ -634,7 +618,6 @@ public partial class MainForm : Form
             var memUsedMB = _systemResourceService.MemoryUsedMB;
             var memTotalMB = _systemResourceService.MemoryTotalMB;
 
-            Console.WriteLine($"MainForm: Updating tooltip - CPU={cpuUsage}%, Mem={memUsedMB}/{memTotalMB}MB");
 
             var tooltipText = _settings.English
                 ? $"otak-agent\nCPU: {cpuUsage:F1}%\nMemory: {memUsedMB:N0} MB / {memTotalMB:N0} MB ({memUsage:F1}%)"
@@ -649,7 +632,6 @@ public partial class MainForm : Form
             }
 
             _notifyIcon.Text = tooltipText;
-            Console.WriteLine($"MainForm: Tooltip set to: {_notifyIcon.Text}");
         }
     }
 

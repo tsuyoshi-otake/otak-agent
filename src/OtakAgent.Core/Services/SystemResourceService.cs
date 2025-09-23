@@ -46,11 +46,9 @@ namespace OtakAgent.Core.Services
             {
                 _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
                 _cpuCounter.NextValue(); // Initialize
-                Console.WriteLine("SystemResourceService: CPU counter initialized");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SystemResourceService: Failed to initialize CPU counter - {ex.Message}");
                 throw;
             }
         }
@@ -60,7 +58,6 @@ namespace OtakAgent.Core.Services
             if (_monitoringTask != null && !_monitoringTask.IsCompleted)
                 return;
 
-            Console.WriteLine("SystemResourceService: Starting monitoring");
             _cancellationTokenSource = new CancellationTokenSource();
             _monitoringTask = Task.Run(async () => await MonitorResourcesAsync(_cancellationTokenSource.Token));
         }
@@ -81,7 +78,6 @@ namespace OtakAgent.Core.Services
 
         private async Task MonitorResourcesAsync(CancellationToken cancellationToken)
         {
-            Console.WriteLine("SystemResourceService: MonitorResourcesAsync started");
 
             try
             {
@@ -100,7 +96,6 @@ namespace OtakAgent.Core.Services
                         // Get memory information
                         UpdateMemoryInfo();
 
-                        Console.WriteLine($"Resource Update: CPU={CpuUsage}%, Memory={MemoryUsedMB}/{MemoryTotalMB} MB ({MemoryUsagePercentage}%)");
 
                         // Raise event
                         ResourcesUpdated?.Invoke(this, new ResourceUpdateEventArgs
@@ -115,19 +110,18 @@ namespace OtakAgent.Core.Services
                     }
                     catch (TaskCanceledException)
                     {
-                        Console.WriteLine("SystemResourceService: Monitoring cancelled");
                         break;
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Resource monitoring error: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Resource monitoring error: {ex.Message}");
                         await Task.Delay(5000, cancellationToken); // Wait longer on error
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SystemResourceService: Fatal error in MonitorResourcesAsync - {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SystemResourceService: Fatal error in MonitorResourcesAsync - {ex.Message}");
             }
         }
 
@@ -153,7 +147,6 @@ namespace OtakAgent.Core.Services
                             ? Math.Round((double)MemoryUsedMB / MemoryTotalMB * 100, 1)
                             : 0;
 
-                        System.Diagnostics.Debug.WriteLine($"Memory WMI: Total={totalKB}KB, Free={freeKB}KB, TotalMB={MemoryTotalMB}, UsedMB={MemoryUsedMB}");
                         break;
                     }
                 }
@@ -182,7 +175,6 @@ namespace OtakAgent.Core.Services
                             MemoryUsagePercentage = Math.Round((double)MemoryUsedMB / MemoryTotalMB * 100, 1);
                         }
 
-                        System.Diagnostics.Debug.WriteLine($"Memory Fallback: TotalMB={MemoryTotalMB}, UsedMB={MemoryUsedMB}");
                     }
                     catch (Exception ex2)
                     {
