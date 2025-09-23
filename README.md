@@ -22,6 +22,59 @@ Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinFo
 4. Publish for distribution: `dotnet publish -c Release -r win-x64 --self-contained false`
 5. Resources (GIF/PNG/WAV) are automatically copied from `src/OtakAgent.App/Resources` during build
 
+### Creating MSIX Package for Microsoft Store
+
+#### Prerequisites
+- Windows SDK installed (includes makeappx.exe)
+  - Install via: `winget install --id Microsoft.WindowsSDK.10.0.18362`
+
+#### Step-by-Step Instructions
+
+1. **Build Release Version**
+   ```bash
+   dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
+   ```
+
+2. **Generate Store Assets** (if not already created)
+   ```powershell
+   cd OtakAgent.Package
+   powershell -ExecutionPolicy Bypass -File generate-assets.ps1
+   cd ..
+   ```
+
+3. **Create MSIX Structure**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File create-simple-msix.ps1
+   ```
+
+4. **Build MSIX Package**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File build-msix.ps1
+   ```
+
+   Or manually:
+   ```powershell
+   & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /d OtakAgent_MSIX /p OtakAgent.msix /nv /o
+   ```
+
+5. **Test Installation** (requires Developer Mode)
+   ```powershell
+   Add-AppxPackage -Path OtakAgent.msix -AllowUnsigned
+   ```
+
+#### Microsoft Store Submission
+1. Upload `OtakAgent.msix` to [Partner Center](https://partner.microsoft.com/dashboard)
+2. Microsoft will automatically sign the package
+3. Fill in Store listing information
+4. Submit for certification
+
+#### Package Contents
+- **OtakAgent.msix** (~49MB) contains:
+  - Main application executable
+  - AppxManifest.xml (package manifest)
+  - Store icons (Square, Wide, Splash Screen)
+  - Application resources (GIFs, WAVs, PNGs)
+
 ## Configuration
 - Settings live beside the executable in `agenttalk.settings.json` and are managed by `SettingsService` in `OtakAgent.Core`.
 - On first launch, `IniSettingsImporter` migrates legacy `agenttalk.ini` and `SystemPrompt.ini` when detected.

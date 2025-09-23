@@ -1,0 +1,3 @@
+@echo off
+echo Starting OtakAgent...
+start "" "%~dp0OtakAgent.App.exe"
