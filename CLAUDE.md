@@ -2,12 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Framework Requirements
+- **.NET 10 RC1** (10.0.100-rc.1 or later)
+- Windows 11 with desktop development tools
+- Target frameworks:
+  - `net10.0` for OtakAgent.Core
+  - `net10.0-windows` for OtakAgent.App
+
 ## Common Commands
 
 ### Build and Run
 - **Build the solution**: `dotnet build otak-agent.sln`
 - **Run the application**: `dotnet run --project src/OtakAgent.App`
 - **Clean build**: `dotnet clean && dotnet build`
+- **Restore packages**: `dotnet restore`
 
 ### Publishing
 - **Publish for distribution**: `dotnet publish -c Release -r win-x64 --self-contained false`

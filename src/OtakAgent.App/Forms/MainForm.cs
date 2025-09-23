@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using OtakAgent.Core.Chat;
 using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Personality;
+using OtakAgent.Core.Services;
 
 namespace OtakAgent.App.Forms;
 
@@ -19,8 +20,10 @@ public partial class MainForm : Form
     private readonly SettingsService _settingsService;
     private readonly ChatService _chatService;
     private readonly PersonalityPromptBuilder _personalityPromptBuilder;
+    private readonly ISystemResourceService _systemResourceService;
     private readonly List<ChatMessage> _history = new();
     private readonly System.Windows.Forms.Timer _animationTimer;
+    private readonly System.Windows.Forms.Timer _resourceUpdateTimer;
 
     private static readonly Color BubbleFillColor = Color.FromArgb(255, 255, 206);
     private static readonly Color MagentaColorKey = Color.Magenta;
@@ -40,11 +43,12 @@ public partial class MainForm : Form
 
     private bool _isPlaceholderActive;
 
-    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder)
+    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService)
     {
         _settingsService = settingsService;
         _chatService = chatService;
         _personalityPromptBuilder = personalityPromptBuilder;
+        _systemResourceService = systemResourceService;
 
         InitializeComponent();
         ApplyBubbleLayout();
@@ -70,6 +74,11 @@ public partial class MainForm : Form
         _animationTimer = new System.Windows.Forms.Timer { Interval = 1400 };
         _animationTimer.Tick += OnAnimationTimerTick;
 
+        _resourceUpdateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+        _resourceUpdateTimer.Tick += OnResourceUpdateTimerTick;
+
+        _systemResourceService.ResourcesUpdated += OnSystemResourcesUpdated;
+
         Controls.SetChildIndex(_characterPicture, 0);
     }
 
@@ -86,11 +95,18 @@ public partial class MainForm : Form
         PositionWindow();
         PositionCharacter();
         UpdateTooltips();
+
+        // Start resource monitoring
+        _systemResourceService.StartMonitoring();
+        _resourceUpdateTimer.Start();
+
+        // Set initial tooltip with resource info
+        UpdateSystemTrayTooltip();
     }
 
     private void ApplyLocalization()
     {
-        Text = "AgentTalk";
+        Text = "otak-agent";
         _promptLabel.Text = _settings.English ? "What would you like to do?" : "何をしますか？";
 
         if (string.IsNullOrWhiteSpace(_inputTextBox.Text) || _isPlaceholderActive || IsPlaceholderText(_inputTextBox.Text))
@@ -106,7 +122,7 @@ public partial class MainForm : Form
         _secondaryButton.Text = OptionsText();
         _notifyToggleTopMostMenuItem.Text = _settings.English ? "Always on Top" : "常に手前に表示";
         _notifyExitMenuItem.Text = _settings.English ? "Exit" : "終了";
-        _toolTip.SetToolTip(_characterPicture, _settings.English ? "Double-click to bring AgentTalk to front" : "ダブルクリックでAgentTalkを手前に表示");
+        _toolTip.SetToolTip(_characterPicture, _settings.English ? "Double-click to bring otak-agent to front" : "ダブルクリックでotak-agentを手前に表示");
     }
     private void ApplyBubbleLayout()
     {
@@ -181,6 +197,9 @@ public partial class MainForm : Form
             using var iconStream = File.OpenRead(iconPath);
             Icon = new Icon(iconStream);
             _notifyIcon.Icon = Icon;
+
+            // Initialize tooltip text (will be updated with resource info later)
+            _notifyIcon.Text = "otak-agent";
         }
 
         var baseImageName = _settings.English ? "clippy" : "kairu";
@@ -566,7 +585,7 @@ public partial class MainForm : Form
     private void OnAnimationTimerTick(object? sender, EventArgs e)
     {
         _animationTimer.Stop();
-        
+
         // Use BeginInvoke to avoid blocking the UI thread
         if (!IsDisposed && !Disposing)
         {
@@ -574,6 +593,63 @@ public partial class MainForm : Form
             {
                 SetCharacterImage(_secondaryCharacterFrame);
             });
+        }
+    }
+
+    private void OnResourceUpdateTimerTick(object? sender, EventArgs e)
+    {
+        Console.WriteLine("OnResourceUpdateTimerTick called");
+
+        // Ensure we're on the UI thread
+        if (InvokeRequired)
+        {
+            BeginInvoke(() => UpdateSystemTrayTooltip());
+        }
+        else
+        {
+            UpdateSystemTrayTooltip();
+        }
+    }
+
+    private void OnSystemResourcesUpdated(object? sender, ResourceUpdateEventArgs e)
+    {
+        // This event is raised from the resource service when new data is available
+        // Update tooltip immediately when new data arrives
+        if (InvokeRequired)
+        {
+            BeginInvoke(() => UpdateSystemTrayTooltip());
+        }
+        else
+        {
+            UpdateSystemTrayTooltip();
+        }
+    }
+
+    private void UpdateSystemTrayTooltip()
+    {
+        if (!IsDisposed && !Disposing && _notifyIcon != null)
+        {
+            var cpuUsage = _systemResourceService.CpuUsage;
+            var memUsage = _systemResourceService.MemoryUsagePercentage;
+            var memUsedMB = _systemResourceService.MemoryUsedMB;
+            var memTotalMB = _systemResourceService.MemoryTotalMB;
+
+            Console.WriteLine($"MainForm: Updating tooltip - CPU={cpuUsage}%, Mem={memUsedMB}/{memTotalMB}MB");
+
+            var tooltipText = _settings.English
+                ? $"otak-agent\nCPU: {cpuUsage:F1}%\nMemory: {memUsedMB:N0} MB / {memTotalMB:N0} MB ({memUsage:F1}%)"
+                : $"otak-agent\nCPU使用率: {cpuUsage:F1}%\nメモリ: {memUsedMB:N0} MB / {memTotalMB:N0} MB ({memUsage:F1}%)";
+
+            // NotifyIcon text is limited to 64 characters
+            if (tooltipText.Length > 63)
+            {
+                tooltipText = _settings.English
+                    ? $"CPU: {cpuUsage:F1}% | Mem: {memUsage:F1}%"
+                    : $"CPU: {cpuUsage:F1}% | メモリ: {memUsage:F1}%";
+            }
+
+            _notifyIcon.Text = tooltipText;
+            Console.WriteLine($"MainForm: Tooltip set to: {_notifyIcon.Text}");
         }
     }
 
@@ -628,6 +704,13 @@ public partial class MainForm : Form
         _notifyIcon.Visible = false;
         _animationTimer.Stop();
         _animationTimer.Dispose();
+        _resourceUpdateTimer.Stop();
+        _resourceUpdateTimer.Dispose();
+        _systemResourceService.StopMonitoring();
+        if (_systemResourceService is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
         _characterPicture.Image = null;
         DisposeCharacterFrames();
         DisposeBubbleImages();

@@ -1,23 +1,26 @@
 # otak-agent
 
-Modernizing the classic AgentTalk floating assistant into a single .NET 9 WinForms application without native dependencies.
+Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinForms application without native dependencies.
 
 ## Highlights
-- Targets `net9.0-windows` and replaces the legacy C++ bridge with modern async/await HttpClient pipelines.
-- Keeps the nostalgic Clippy/Kairu personas, floating window, and double Ctrl+C capture that defined AgentTalk.
-- Simplifies deployment to one executable, JSON settings beside it, and optional history under `%AppData%/AgentTalk`.
+- Targets `net10.0-windows` leveraging the latest .NET 10 RC features and performance improvements
+- Keeps the nostalgic Clippy/Kairu personas, floating window, and double Ctrl+C capture that defined AgentTalk
+- Simplifies deployment to one executable, JSON settings beside it, and optional history under `%AppData%/AgentTalk`
+- Features expandable text area with 5x vertical expansion for longer inputs
+- Interactive UI with right-click context menu and double-click bubble toggle
 
 ## Getting Started
 ### Prerequisites
-- Windows 11 with desktop development tools enabled.
-- .NET 9 SDK (net9.0-windows target).
-- OpenAI-compatible API key (or equivalent endpoint) for chat completions.
+- Windows 11 with desktop development tools enabled
+- .NET 10 SDK RC1 (10.0.100-rc.1 or later) - [Download](https://dotnet.microsoft.com/download/dotnet/10.0)
+- OpenAI-compatible API key (or equivalent endpoint) for chat completions
 
 ### Build & Run
-1. Restore and build the solution: `dotnet build otak-agent.sln`.
-2. Run the WinForms front-end: `dotnet run --project src/OtakAgent.App`.
-3. Publish for distribution: `dotnet publish -c Release -r win-x64 --self-contained false`.
-4. Copy the legacy GIF/PNG/WAV assets into `src/OtakAgent.App/Resources` until embedded resources are finalized.
+1. Install .NET 10 SDK RC1 if not already installed
+2. Restore and build the solution: `dotnet build otak-agent.sln`
+3. Run the WinForms front-end: `dotnet run --project src/OtakAgent.App`
+4. Publish for distribution: `dotnet publish -c Release -r win-x64 --self-contained false`
+5. Resources (GIF/PNG/WAV) are automatically copied from `src/OtakAgent.App/Resources` during build
 
 ## Configuration
 - Settings live beside the executable in `agenttalk.settings.json` and are managed by `SettingsService` in `OtakAgent.Core`.

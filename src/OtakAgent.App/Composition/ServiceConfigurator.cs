@@ -2,6 +2,7 @@ using System.IO;
 using OtakAgent.Core.Chat;
 using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Personality;
+using OtakAgent.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace OtakAgent.App.Composition;
@@ -24,6 +25,7 @@ internal static class ServiceConfigurator
 
         services.AddHttpClient<ChatService>();
         services.AddSingleton<PersonalityPromptBuilder>();
+        services.AddSingleton<ISystemResourceService, SystemResourceService>();
 
         services.AddSingleton<Forms.MainForm>();
 
