@@ -14,6 +14,7 @@ partial class MainForm
     private TextBox _inputTextBox = null!;
     private Button _sendButton = null!;
     private Button _secondaryButton = null!;
+    private Button _expandToggleButton = null!;
     private CharacterCanvas _characterPicture = null!;
     private NotifyIcon _notifyIcon = null!;
     private ContextMenuStrip _notifyContextMenu = null!;
@@ -44,6 +45,7 @@ partial class MainForm
         _inputTextBox = new TextBox();
         _sendButton = new Button();
         _secondaryButton = new Button();
+        _expandToggleButton = new Button();
         _characterPicture = new CharacterCanvas();
         _notifyIcon = new NotifyIcon(components);
         _notifyContextMenu = new ContextMenuStrip(components);
@@ -60,6 +62,7 @@ partial class MainForm
         _bubblePanel.Controls.Add(_inputTextBox);
         _bubblePanel.Controls.Add(_sendButton);
         _bubblePanel.Controls.Add(_secondaryButton);
+        _bubblePanel.Controls.Add(_expandToggleButton);
         _bubblePanel.Location = new Point(44, 24);
         _bubblePanel.Name = "_bubblePanel";
         _bubblePanel.Size = new Size(226, 148);
@@ -105,6 +108,22 @@ partial class MainForm
         _secondaryButton.Size = new Size(76, 20);
         _secondaryButton.TabIndex = 2;
         _secondaryButton.Text = "Options";
+        //
+        //_expandToggleButton
+        //
+        _expandToggleButton.BackColor = Color.FromArgb(255, 255, 247, 184);
+        _expandToggleButton.FlatAppearance.BorderSize = 0;
+        _expandToggleButton.FlatAppearance.MouseDownBackColor = Color.FromArgb(255, 255, 238, 170);
+        _expandToggleButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(255, 255, 255, 206);
+        _expandToggleButton.FlatStyle = FlatStyle.Flat;
+        _expandToggleButton.Font = new Font("Segoe UI", 6F, FontStyle.Regular, GraphicsUnit.Point);
+        _expandToggleButton.ForeColor = Color.FromArgb(102, 51, 0);
+        _expandToggleButton.Location = new Point(200, 8);
+        _expandToggleButton.Name = "_expandToggleButton";
+        _expandToggleButton.Size = new Size(16, 16);
+        _expandToggleButton.TabIndex = 6;
+        _expandToggleButton.Text = "▼";
+        _expandToggleButton.UseVisualStyleBackColor = false;
         //
         //_characterPicture
         //

@@ -53,11 +53,6 @@ The application uses constructor dependency injection with these core services:
 - System tray icon with context menu
 - Ctrl+Enter to submit, Ctrl+Backspace to reset
 
-## Current Tasks (TODO)
-
-- [ ] 吹き出しの縁やキャラクター周辺に残るマゼンタのにじみを解消する。現状はカラーキー処理で除去しきれていない部分がある。
-- [ ] キャラクターが起動直後に表示されないケースを再確認し、アニメーション開始前でも常に可視化できるようにする。
-
 ## Important Context
 
 ### Asset Management

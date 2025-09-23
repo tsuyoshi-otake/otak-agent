@@ -53,6 +53,7 @@ public partial class MainForm : Form
         FormClosing += MainForm_FormClosing;
         _sendButton.Click += async (_, _) => await HandleSendButtonClickAsync().ConfigureAwait(false);
         _secondaryButton.Click += async (_, _) => await HandleSecondaryButtonClickAsync();
+        _expandToggleButton.Click += (_, _) => ToggleExpandedView();
         _notifyToggleTopMostMenuItem.CheckedChanged += (_, _) => TopMost = _notifyToggleTopMostMenuItem.Checked;
         _notifyExitMenuItem.Click += (_, _) => Close();
         _notifyIcon.MouseDoubleClick += (_, _) => ToggleWindowVisibility(true);
@@ -62,8 +63,9 @@ public partial class MainForm : Form
         _bubblePanel.MouseDown += BubblePanel_MouseDown;
         _bubblePanel.MouseMove += BubblePanel_MouseMove;
         _bubblePanel.SizeChanged += (_, _) => UpdateBubbleBackground();
-        _characterPicture.MouseDown += BubblePanel_MouseDown;
+        _characterPicture.MouseDown += CharacterPicture_MouseDown;
         _characterPicture.MouseMove += BubblePanel_MouseMove;
+        _characterPicture.MouseDoubleClick += (_, _) => _bubblePanel.Visible = !_bubblePanel.Visible;
 
         _animationTimer = new System.Windows.Forms.Timer { Interval = 1400 };
         _animationTimer.Tick += OnAnimationTimerTick;
@@ -109,21 +111,51 @@ public partial class MainForm : Form
     private void ApplyBubbleLayout()
     {
         const int bubbleWidth = 226;
-        const int bubbleHeight = 148;
-        _bubblePanel.Location = new Point(44, 24);
+        const int defaultFormHeight = 312;
+        int bubbleHeight = 148;
+        int bubblePanelY = 24;
+        int textBoxHeight = 59;
+        int buttonY = 100;
+        int formHeight = defaultFormHeight;
+        
+        // Update toggle button text
+        _expandToggleButton.Text = _settings.ExpandedTextbox ? "▲" : "▼";
+        
+        // Apply 5x expansion if ExpandedTextbox is enabled - expand upwards
+        if (_settings.ExpandedTextbox)
+        {
+            int expansionAmount = (59 * 5) - 59; // Additional height needed (236 pixels)
+            textBoxHeight = 59 * 5; // 295 pixels
+            bubbleHeight = 148 + expansionAmount; // Expand bubble height
+            formHeight = defaultFormHeight + expansionAmount; // Expand form height
+            // Keep bubble panel at same position - don't move it up
+            buttonY = 32 + textBoxHeight + 9; // Position buttons below expanded textbox with proper spacing
+            
+            // Resize the form and adjust position to expand upwards
+            var currentLocation = Location;
+            Size = new Size(310, formHeight);
+            Location = new Point(currentLocation.X, currentLocation.Y - expansionAmount);
+        }
+        else
+        {
+            // Reset to default size and position
+            Size = new Size(310, defaultFormHeight);
+        }
+        
+        _bubblePanel.Location = new Point(44, bubblePanelY);
         _bubblePanel.Size = new Size(bubbleWidth, bubbleHeight);
 
         _promptLabel.MaximumSize = new Size(194, 0);
-        _promptLabel.Location = new Point(16, 14);
+        _promptLabel.Location = new Point(8, 8);
 
-        _inputTextBox.Location = new Point(16, 42);
-        _inputTextBox.Size = new Size(194, 56);
+        _inputTextBox.Location = new Point(8, 32);
+        _inputTextBox.Size = new Size(210, textBoxHeight);
 
         _secondaryButton.Size = new Size(76, 20);
-        _secondaryButton.Location = new Point(12, 105);
+        _secondaryButton.Location = new Point(12, buttonY);
 
         _sendButton.Size = new Size(76, 20);
-        _sendButton.Location = new Point(138, 105);
+        _sendButton.Location = new Point(138, buttonY);
     }
 
     private void LoadAssets()
@@ -211,17 +243,17 @@ public partial class MainForm : Form
         using var attributes = new ImageAttributes();
         attributes.SetColorKey(MagentaColorKey, MagentaColorKey);
 
-        const int topOffset = 1;
-        const int bottomOffset = 1;
+        const int topOffset = 0;
+        const int bottomOffset = 0;
 
-        var topCrop = Math.Min(topOffset, Math.Max(0, _bubbleTopImage.Height - 1));
-        var bottomCrop = Math.Min(bottomOffset, Math.Max(0, _bubbleBottomImage.Height - 1));
+        var topCrop = 0;
+        var bottomCrop = 0;
 
-        var topSrcHeight = Math.Max(0, _bubbleTopImage.Height - topCrop);
-        var bottomSrcHeight = Math.Max(0, _bubbleBottomImage.Height - bottomCrop);
+        var topSrcHeight = _bubbleTopImage.Height;
+        var bottomSrcHeight = _bubbleBottomImage.Height;
 
-        var topDestY = topOffset;
-        var bottomDestY = Math.Max(topDestY + topSrcHeight, height - bottomSrcHeight - bottomOffset);
+        var topDestY = 0;
+        var bottomDestY = Math.Max(topDestY + topSrcHeight, height - bottomSrcHeight - 5);
 
         var centerStart = topDestY + topSrcHeight;
         var centerHeight = Math.Max(0, bottomDestY - centerStart);
@@ -261,9 +293,27 @@ public partial class MainForm : Form
         Location = new Point(targetX, targetY);
     }
 
+    private void ToggleExpandedView()
+    {
+        _settings.ExpandedTextbox = !_settings.ExpandedTextbox;
+        _expandToggleButton.Text = _settings.ExpandedTextbox ? "▲" : "▼";
+        ApplyBubbleLayout();
+        UpdateBubbleBackground();
+        PositionCharacter();
+        _ = _settingsService.SaveAsync(_settings);
+    }
+
     private void PositionCharacter()
     {
         var characterLocation = new Point(158, 173);
+        
+        // Adjust character position when textbox is expanded
+        if (_settings.ExpandedTextbox)
+        {
+            int expansionAmount = (59 * 5) - 59; // 236 pixels
+            characterLocation = new Point(characterLocation.X, characterLocation.Y + expansionAmount);
+        }
+        
         if (_settings.English)
         {
             characterLocation = new Point(characterLocation.X - 8, characterLocation.Y);
@@ -507,17 +557,44 @@ public partial class MainForm : Form
     private void OnAnimationTimerTick(object? sender, EventArgs e)
     {
         _animationTimer.Stop();
-        SetCharacterImage(_secondaryCharacterFrame);
+        
+        // Use BeginInvoke to avoid blocking the UI thread
+        if (!IsDisposed && !Disposing)
+        {
+            BeginInvoke(() =>
+            {
+                SetCharacterImage(_secondaryCharacterFrame);
+            });
+        }
     }
 
     private void SetCharacterImage(Image? source)
     {
-        if (source is null)
+        if (source is null || IsDisposed || Disposing)
         {
             return;
         }
 
+        // Ensure we're on the UI thread
+        if (InvokeRequired)
+        {
+            BeginInvoke(() => SetCharacterImage(source));
+            return;
+        }
+
         _characterPicture.Image = source;
+    }
+
+    private void CharacterPicture_MouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+        {
+            _dragOffset = new Point(e.X, e.Y);
+        }
+        else if (e.Button == MouseButtons.Right)
+        {
+            _notifyContextMenu.Show(_characterPicture, e.Location);
+        }
     }
 
     private void BubblePanel_MouseDown(object? sender, MouseEventArgs e)
