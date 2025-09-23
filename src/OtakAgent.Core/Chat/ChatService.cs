@@ -107,9 +107,20 @@ public sealed class ChatService
             host = "https://api.openai.com";
         }
 
+        // Ensure HTTPS unless localhost
         if (!host.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
             host = $"https://{host}";
+        }
+        else if (host.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            // Check if it's localhost/127.0.0.1
+            var uri = new Uri(host);
+            if (!uri.IsLoopback)
+            {
+                // Force HTTPS for non-localhost connections
+                host = "https" + host.Substring(4);
+            }
         }
 
         host = host.TrimEnd('/');
@@ -119,6 +130,9 @@ public sealed class ChatService
         {
             endpoint = $"/{endpoint}";
         }
+
+        // Sanitize endpoint to prevent directory traversal
+        endpoint = endpoint.Replace("..", "").Replace("\\", "/");
 
         return new Uri(host + endpoint, UriKind.Absolute);
     }

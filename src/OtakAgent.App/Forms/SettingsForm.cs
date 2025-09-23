@@ -1,6 +1,9 @@
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using OtakAgent.Core.Configuration;
+using OtakAgent.Core.Validation;
+using OtakAgent.Core.Security;
 
 namespace OtakAgent.App.Forms;
 
@@ -90,6 +93,7 @@ public partial class SettingsForm : Form
 
     private async Task SaveAsync()
     {
+        // Sanitize inputs before saving
         UpdatedSettings = new AgentTalkSettings
         {
             English = _englishCheckBox.Checked,
@@ -103,26 +107,37 @@ public partial class SettingsForm : Form
             Endpoint = _endpointTextBox.Text.Trim(),
             ApiKey = _apiKeyTextBox.Text.Trim(),
             Model = _modelTextBox.Text.Trim(),
-            PersonalityOverride = _personalityOverrideTextBox.Text,
-            SystemPrompt = _systemPromptTextBox.Text,
+            PersonalityOverride = SecureStringHelper.SanitizeInput(_personalityOverrideTextBox.Text),
+            SystemPrompt = SecureStringHelper.SanitizeInput(_systemPromptTextBox.Text),
             LastUserMessage = _workingCopy.LastUserMessage
         };
 
-        if (string.IsNullOrEmpty(UpdatedSettings.Host))
+        // Validate settings before saving
+        var validation = SettingsValidator.ValidateSettings(UpdatedSettings);
+        if (!validation.IsValid)
         {
-            MessageBox.Show(this, _englishCheckBox.Checked ? "Host is required." : "ホストは必須です。", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
+            var message = validation.GetErrorMessage();
+            var title = _englishCheckBox.Checked ? "Validation Error" : "検証エラー";
+            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+            // Only prevent saving if there are critical errors
+            if (validation.Errors.Any(e => e.Contains("required")))
+            {
+                return;
+            }
         }
 
-        if (string.IsNullOrEmpty(UpdatedSettings.Endpoint))
+        try
         {
-            MessageBox.Show(this, _englishCheckBox.Checked ? "Endpoint is required." : "エンドポイントは必須です。", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
+            await _settingsService.SaveAsync(UpdatedSettings).ConfigureAwait(false);
+            DialogResult = DialogResult.OK;
+            Close();
         }
-
-        await _settingsService.SaveAsync(UpdatedSettings).ConfigureAwait(false);
-        DialogResult = DialogResult.OK;
-        Close();
+        catch (Exception ex)
+        {
+            var title = _englishCheckBox.Checked ? "Save Error" : "保存エラー";
+            MessageBox.Show(this, ex.Message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void UpdatePersonalityEditors()

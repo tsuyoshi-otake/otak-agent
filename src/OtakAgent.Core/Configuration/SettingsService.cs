@@ -1,7 +1,10 @@
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using OtakAgent.Core.Security;
+using OtakAgent.Core.Validation;
 
 namespace OtakAgent.Core.Configuration;
 
@@ -41,8 +44,25 @@ public sealed class SettingsService
             }
 
             await using var stream = File.OpenRead(_settingsFilePath);
-            var settings = await JsonSerializer.DeserializeAsync<AgentTalkSettings>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false);
-            return settings ?? AgentTalkSettings.CreateDefault();
+            var settings = await JsonSerializer.DeserializeAsync<AgentTalkSettings>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false)
+                           ?? AgentTalkSettings.CreateDefault();
+
+            // Decrypt API key if it was encrypted
+            if (!string.IsNullOrEmpty(settings.ApiKey))
+            {
+                settings.ApiKey = SecureStringHelper.Unprotect(settings.ApiKey);
+            }
+
+            // Sanitize inputs
+            settings.SystemPrompt = SecureStringHelper.SanitizeInput(settings.SystemPrompt);
+            settings.PersonalityOverride = SecureStringHelper.SanitizeInput(settings.PersonalityOverride);
+            settings.LastUserMessage = SecureStringHelper.SanitizeInput(settings.LastUserMessage);
+
+            // Ensure HTTPS and sanitize URLs
+            settings.Host = SettingsValidator.EnsureHttps(settings.Host);
+            settings.Endpoint = SettingsValidator.SanitizeEndpoint(settings.Endpoint);
+
+            return settings;
         }
         finally
         {
@@ -91,9 +111,35 @@ public sealed class SettingsService
 
     private async Task SaveInternalAsync(AgentTalkSettings settings, CancellationToken cancellationToken)
     {
+        // Validate settings before saving
+        var validation = SettingsValidator.ValidateSettings(settings);
+        if (!validation.IsValid && validation.Errors.Any(e => e.Contains("required")))
+        {
+            throw new InvalidOperationException($"Invalid settings: {validation.GetErrorMessage()}");
+        }
+
+        // Create a copy for saving with encrypted API key
+        var settingsToSave = new AgentTalkSettings
+        {
+            English = settings.English,
+            ExpandedTextbox = settings.ExpandedTextbox,
+            EnablePersonality = settings.EnablePersonality,
+            AutoCopyToClipboard = settings.AutoCopyToClipboard,
+            ClipboardHotkeyEnabled = settings.ClipboardHotkeyEnabled,
+            ClipboardHotkeyIntervalMs = settings.ClipboardHotkeyIntervalMs,
+            UseConversationHistory = settings.UseConversationHistory,
+            Host = SettingsValidator.EnsureHttps(settings.Host),
+            Endpoint = SettingsValidator.SanitizeEndpoint(settings.Endpoint),
+            ApiKey = SecureStringHelper.Protect(settings.ApiKey),  // Encrypt the API key
+            Model = settings.Model,
+            SystemPrompt = SecureStringHelper.SanitizeInput(settings.SystemPrompt),
+            PersonalityOverride = SecureStringHelper.SanitizeInput(settings.PersonalityOverride),
+            LastUserMessage = SecureStringHelper.SanitizeInput(settings.LastUserMessage)
+        };
+
         Directory.CreateDirectory(Path.GetDirectoryName(_settingsFilePath)!);
         await using var stream = File.Create(_settingsFilePath);
-        await JsonSerializer.SerializeAsync(stream, settings, _jsonOptions, cancellationToken).ConfigureAwait(false);
+        await JsonSerializer.SerializeAsync(stream, settingsToSave, _jsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<AgentTalkSettings> LoadUnlockedAsync(CancellationToken cancellationToken)
@@ -104,7 +150,24 @@ public sealed class SettingsService
         }
 
         await using var stream = File.OpenRead(_settingsFilePath);
-        var settings = await JsonSerializer.DeserializeAsync<AgentTalkSettings>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false);
-        return settings ?? AgentTalkSettings.CreateDefault();
+        var settings = await JsonSerializer.DeserializeAsync<AgentTalkSettings>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false)
+                       ?? AgentTalkSettings.CreateDefault();
+
+        // Decrypt API key if it was encrypted
+        if (!string.IsNullOrEmpty(settings.ApiKey))
+        {
+            settings.ApiKey = SecureStringHelper.Unprotect(settings.ApiKey);
+        }
+
+        // Sanitize inputs
+        settings.SystemPrompt = SecureStringHelper.SanitizeInput(settings.SystemPrompt);
+        settings.PersonalityOverride = SecureStringHelper.SanitizeInput(settings.PersonalityOverride);
+        settings.LastUserMessage = SecureStringHelper.SanitizeInput(settings.LastUserMessage);
+
+        // Ensure HTTPS and sanitize URLs
+        settings.Host = SettingsValidator.EnsureHttps(settings.Host);
+        settings.Endpoint = SettingsValidator.SanitizeEndpoint(settings.Endpoint);
+
+        return settings;
     }
 }
