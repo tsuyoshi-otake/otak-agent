@@ -17,6 +17,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run all tests**: `dotnet test`
 - **Run specific test project**: `dotnet test src/OtakAgent.Core.Tests`
 
+## Recent UI Improvements
+
+### Bubble Window Rendering
+- Top and bottom images now display fully without cropping
+- Bottom extends 5px below for proper appearance
+- Proper transparency with magenta color key (RGB 255,0,255)
+
+### Expandable Text Area
+- Toggle button (▼/▲) in top-right corner of bubble (position: 200,8)
+- Expands text area 5x vertically when enabled
+- Form grows upward maintaining bottom position
+- Character position adjusts when expanded
+
+### UI Element Positioning
+- Prompt label: (8, 8)
+- Text input: (8, 32) - normal mode, expands to 295px height
+- Buttons: Positioned dynamically below text area
+- Character adjusts position based on expansion state
+
+### Interactive Features
+- Double-click character to toggle bubble visibility
+- Right-click character for context menu
+- Expand/collapse button for text area
+- Animation transitions handled with BeginInvoke to prevent freezing
+
 ## Architecture Overview
 
 ### Solution Structure
