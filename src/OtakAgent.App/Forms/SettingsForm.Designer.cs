@@ -18,7 +18,6 @@ partial class SettingsForm
     private CheckBox _enablePersonalityCheckBox = null!;
     private CheckBox _autoCopyCheckBox = null!;
     private CheckBox _historyCheckBox = null!;
-    private CheckBox _hotkeyCheckBox = null!;
     private CheckBox _webSearchCheckBox = null!;
     private TextBox _hostTextBox = null!;
     private TextBox _endpointTextBox = null!;
@@ -26,7 +25,6 @@ partial class SettingsForm
     private TextBox _modelTextBox = null!;
     private TextBox _systemPromptTextBox = null!;
     private TextBox _personalityOverrideTextBox = null!;
-    private NumericUpDown _hotkeyIntervalNumeric = null!;
 
     // Presets tab controls
     private ListBox _presetsListBox = null!;
@@ -66,7 +64,6 @@ partial class SettingsForm
         _enablePersonalityCheckBox = new CheckBox();
         _autoCopyCheckBox = new CheckBox();
         _historyCheckBox = new CheckBox();
-        _hotkeyCheckBox = new CheckBox();
         _webSearchCheckBox = new CheckBox();
         _hostTextBox = new TextBox();
         _endpointTextBox = new TextBox();
@@ -74,7 +71,6 @@ partial class SettingsForm
         _modelTextBox = new TextBox();
         _systemPromptTextBox = new TextBox();
         _personalityOverrideTextBox = new TextBox();
-        _hotkeyIntervalNumeric = new NumericUpDown();
 
         // Presets tab controls
         _presetsListBox = new ListBox();
@@ -134,25 +130,6 @@ partial class SettingsForm
         _historyCheckBox.TabIndex = 4;
         _generalTab.Controls.Add(_historyCheckBox);
 
-        _hotkeyCheckBox.AutoSize = true;
-        _hotkeyCheckBox.Location = new Point(16, 140);
-        _hotkeyCheckBox.Text = "Enable Clipboard Hotkey (Ctrl+C x2)";
-        _hotkeyCheckBox.TabIndex = 5;
-        _generalTab.Controls.Add(_hotkeyCheckBox);
-
-        _hotkeyIntervalNumeric.Location = new Point(240, 138);
-        _hotkeyIntervalNumeric.Maximum = 2000;
-        _hotkeyIntervalNumeric.Minimum = 100;
-        _hotkeyIntervalNumeric.Size = new Size(60, 23);
-        _hotkeyIntervalNumeric.TabIndex = 6;
-        _hotkeyIntervalNumeric.Value = 500;
-        _generalTab.Controls.Add(_hotkeyIntervalNumeric);
-
-        var msLabel = new Label();
-        msLabel.AutoSize = true;
-        msLabel.Location = new Point(306, 140);
-        msLabel.Text = "ms";
-        _generalTab.Controls.Add(msLabel);
 
         _webSearchCheckBox.AutoSize = true;
         _webSearchCheckBox.Location = new Point(16, 164);

@@ -75,13 +75,10 @@ public sealed class IniSettingsImporter
                     settings.UseConversationHistory = ParseBoolean(value, true);
                     break;
                 case "clipboardhotkeyenabled":
-                    settings.ClipboardHotkeyEnabled = ParseBoolean(value, true);
+                    // Clipboard hotkey feature has been removed
                     break;
                 case "clipboardhotkeyintervalms":
-                    if (int.TryParse(value, out var interval) && interval > 0)
-                    {
-                        settings.ClipboardHotkeyIntervalMs = interval;
-                    }
+                    // Clipboard hotkey feature has been removed
                     break;
                 case "personalityoverride":
                     settings.PersonalityOverride = value;

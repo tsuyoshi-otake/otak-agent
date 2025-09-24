@@ -8,8 +8,6 @@ public sealed class AgentTalkSettings
     public bool ExpandedTextbox { get; set; }
     public bool EnablePersonality { get; set; }
     public bool AutoCopyToClipboard { get; set; }
-    public bool ClipboardHotkeyEnabled { get; set; } = true;
-    public int ClipboardHotkeyIntervalMs { get; set; } = 500;
     public bool UseConversationHistory { get; set; } = true;
     public string Host { get; set; } = "api.openai.com";
     public string Endpoint { get; set; } = "/v1/responses";

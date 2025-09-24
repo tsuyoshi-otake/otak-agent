@@ -104,11 +104,6 @@ namespace OtakAgent.Core.Validation
                 errors.Add("Model name is required.");
             }
 
-            // Validate numeric ranges
-            if (settings.ClipboardHotkeyIntervalMs < 100 || settings.ClipboardHotkeyIntervalMs > 5000)
-            {
-                errors.Add("Clipboard hotkey interval should be between 100ms and 5000ms.");
-            }
 
             return new ValidationResult
             {

@@ -125,8 +125,6 @@ public sealed class SettingsService
             ExpandedTextbox = settings.ExpandedTextbox,
             EnablePersonality = settings.EnablePersonality,
             AutoCopyToClipboard = settings.AutoCopyToClipboard,
-            ClipboardHotkeyEnabled = settings.ClipboardHotkeyEnabled,
-            ClipboardHotkeyIntervalMs = settings.ClipboardHotkeyIntervalMs,
             UseConversationHistory = settings.UseConversationHistory,
             Host = SettingsValidator.EnsureHttps(settings.Host),
             Endpoint = SettingsValidator.SanitizeEndpoint(settings.Endpoint),

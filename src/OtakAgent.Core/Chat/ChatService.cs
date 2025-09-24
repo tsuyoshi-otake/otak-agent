@@ -201,7 +201,7 @@ public sealed class ChatService
             ? request.UserMessage + conversationHistory
             : $"{systemPrompt}\n\nUser: {request.UserMessage}{conversationHistory}";
 
-        return new ResponsesApiRequest
+        var payload = new ResponsesApiRequest
         {
             Model = request.Settings.Model,
             Input = fullInput,
@@ -209,6 +209,25 @@ public sealed class ChatService
             Temperature = request.Temperature,
             TopP = request.TopP
         };
+
+        // Add web search tool if enabled
+        if (request.Settings.EnableWebSearch)
+        {
+            payload.Tools = new List<object>
+            {
+                new Dictionary<string, object>
+                {
+                    ["type"] = "web_search",
+                    ["user_location"] = new Dictionary<string, string>
+                    {
+                        ["type"] = "approximate"
+                    },
+                    ["search_context_size"] = "low"
+                }
+            };
+        }
+
+        return payload;
     }
 
     private static Uri BuildResponsesApiUri(AgentTalkSettings settings)

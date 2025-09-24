@@ -172,9 +172,7 @@ public partial class SettingsForm : Form
         _enablePersonalityCheckBox.Checked = _workingCopy.EnablePersonality;
         _autoCopyCheckBox.Checked = _workingCopy.AutoCopyToClipboard;
         _historyCheckBox.Checked = _workingCopy.UseConversationHistory;
-        _hotkeyCheckBox.Checked = _workingCopy.ClipboardHotkeyEnabled;
         _webSearchCheckBox.Checked = _workingCopy.EnableWebSearch;
-        _hotkeyIntervalNumeric.Value = Math.Clamp(_workingCopy.ClipboardHotkeyIntervalMs, 100, 2000);
         _hostTextBox.Text = _workingCopy.Host;
         _endpointTextBox.Text = _workingCopy.Endpoint;
         _apiKeyTextBox.Text = _workingCopy.ApiKey;
@@ -196,7 +194,6 @@ public partial class SettingsForm : Form
             _enablePersonalityCheckBox.Text = "Enable Clippy/Kairu persona";
             _autoCopyCheckBox.Text = "Auto-copy responses to clipboard";
             _historyCheckBox.Text = "Keep conversation history";
-            _hotkeyCheckBox.Text = "Enable double Ctrl+C clipboard hotkey";
             _webSearchCheckBox.Text = "Enable Web Search (for compatible models)";
             _hostTextBox.PlaceholderText = "Host (e.g. api.openai.com)";
             _endpointTextBox.PlaceholderText = "Endpoint (e.g. /v1/chat/completions)";
@@ -222,7 +219,6 @@ public partial class SettingsForm : Form
             _enablePersonalityCheckBox.Text = "キャラクター人格を有効化";
             _autoCopyCheckBox.Text = "返信を自動的にコピー";
             _historyCheckBox.Text = "会話履歴を保持";
-            _hotkeyCheckBox.Text = "Ctrl+C 2 回でクリップボード送信";
             _webSearchCheckBox.Text = "Web 検索を有効化 (対応モデルのみ)";
             _hostTextBox.PlaceholderText = "ホスト (例: api.openai.com)";
             _endpointTextBox.PlaceholderText = "エンドポイント (例: /v1/chat/completions)";
@@ -247,9 +243,7 @@ public partial class SettingsForm : Form
         _workingCopy.EnablePersonality = _enablePersonalityCheckBox.Checked;
         _workingCopy.AutoCopyToClipboard = _autoCopyCheckBox.Checked;
         _workingCopy.UseConversationHistory = _historyCheckBox.Checked;
-        _workingCopy.ClipboardHotkeyEnabled = _hotkeyCheckBox.Checked;
         _workingCopy.EnableWebSearch = _webSearchCheckBox.Checked;
-        _workingCopy.ClipboardHotkeyIntervalMs = (int)_hotkeyIntervalNumeric.Value;
         _workingCopy.Host = _hostTextBox.Text.Trim();
         _workingCopy.Endpoint = _endpointTextBox.Text.Trim();
         _workingCopy.ApiKey = _apiKeyTextBox.Text.Trim();
@@ -325,9 +319,7 @@ public partial class SettingsForm : Form
         target.EnablePersonality = source.EnablePersonality;
         target.AutoCopyToClipboard = source.AutoCopyToClipboard;
         target.UseConversationHistory = source.UseConversationHistory;
-        target.ClipboardHotkeyEnabled = source.ClipboardHotkeyEnabled;
         target.EnableWebSearch = source.EnableWebSearch;
-        target.ClipboardHotkeyIntervalMs = source.ClipboardHotkeyIntervalMs;
         target.Host = source.Host;
         target.Endpoint = source.Endpoint;
         target.ApiKey = source.ApiKey;
