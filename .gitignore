@@ -15,6 +15,23 @@ obj/
 *.publish/
 TestResult*/
 *.log
+publish/
+publish-full/
+publish-msix/
 
 # Legacy reference kept outside source control
 agent-talk-main/
+
+# MSIX packages
+OtakAgent_MSIX/
+OtakAgent_NET9_MSIX/
+*.msix
+
+# MSI installers
+*.msi
+*.wixpdb
+
+# Portable packages
+otak-agent-portable/
+otak-agent-portable.zip
+otak-agent-installer.zip

@@ -22,13 +22,38 @@ Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinFo
 4. Publish for distribution: `dotnet publish -c Release -r win-x64 --self-contained false`
 5. Resources (GIF/PNG/WAV) are automatically copied from `src/OtakAgent.App/Resources` during build
 
-### Creating MSIX Package for Microsoft Store
+### Installation Options
 
-#### Prerequisites
+#### Download Pre-built Packages
+- **GitHub Release**: Download from [Latest Release](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
+  - `otak-agent.msi` - Windows Installer (recommended)
+  - `otak-agent-portable.zip` - Portable version with Install/Uninstall scripts
+
+#### Install from Microsoft Store
+- Coming soon to Microsoft Store
+
+#### MSI Installation
+1. Download `otak-agent.msi` from releases
+2. Double-click to install
+3. Follow the installation wizard
+
+#### Portable Installation (ZIP)
+1. Download `otak-agent-portable.zip` from releases
+2. Extract the ZIP file
+3. Run `Install.bat` as Administrator for system-wide installation
+4. Or run `OtakAgent.App.exe` directly for portable use
+
+To uninstall: Run `Uninstall.bat` as Administrator (for installed version)
+
+### Building from Source
+
+#### Creating MSIX Package for Microsoft Store
+
+##### Prerequisites
 - Windows SDK installed (includes makeappx.exe)
   - Install via: `winget install --id Microsoft.WindowsSDK.10.0.18362`
 
-#### Step-by-Step Instructions
+##### Step-by-Step Instructions
 
 1. **Build Release Version**
    ```bash
@@ -60,6 +85,31 @@ Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinFo
 5. **Test Installation** (requires Developer Mode)
    ```powershell
    Add-AppxPackage -Path OtakAgent.msix -AllowUnsigned
+   ```
+
+#### Creating Portable Installer (ZIP)
+1. **Build and Create Installer**
+   ```powershell
+   dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
+   powershell -ExecutionPolicy Bypass -File create-portable-installer.ps1
+   ```
+
+2. **Output**: `otak-agent-portable.zip` containing:
+   - Application files
+   - `Install.bat` - Installer script
+   - `Uninstall.bat` - Uninstaller script
+   - `README.txt` - Instructions
+
+#### Creating MSI Installer
+1. **Install WiX v6** (.NET tool)
+   ```bash
+   dotnet tool install -g wix
+   ```
+
+2. **Build and Create MSI**
+   ```bash
+   dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
+   wix build simple-installer.wxs -o otak-agent.msi
    ```
 
 #### Microsoft Store Submission
