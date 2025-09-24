@@ -22,7 +22,7 @@ partial class SettingsForm
     private TextBox _hostTextBox = null!;
     private TextBox _endpointTextBox = null!;
     private TextBox _apiKeyTextBox = null!;
-    private TextBox _modelTextBox = null!;
+    private ComboBox _modelComboBox = null!;
     private TextBox _systemPromptTextBox = null!;
     private TextBox _personalityOverrideTextBox = null!;
 
@@ -70,7 +70,7 @@ partial class SettingsForm
         _hostTextBox = new TextBox();
         _endpointTextBox = new TextBox();
         _apiKeyTextBox = new TextBox();
-        _modelTextBox = new TextBox();
+        _modelComboBox = new ComboBox();
         _systemPromptTextBox = new TextBox();
         _personalityOverrideTextBox = new TextBox();
 
@@ -179,10 +179,16 @@ partial class SettingsForm
         modelLabel.Text = "Model:";
         _generalTab.Controls.Add(modelLabel);
 
-        _modelTextBox.Location = new Point(16, 360);
-        _modelTextBox.Size = new Size(320, 23);
-        _modelTextBox.TabIndex = 11;
-        _generalTab.Controls.Add(_modelTextBox);
+        _modelComboBox.Location = new Point(16, 360);
+        _modelComboBox.Size = new Size(320, 23);
+        _modelComboBox.TabIndex = 11;
+        _modelComboBox.DropDownStyle = ComboBoxStyle.DropDown;
+        _modelComboBox.Items.AddRange(new object[] {
+            "gpt-5-codex",
+            "gpt-5",
+            "gpt-4.1"
+        });
+        _generalTab.Controls.Add(_modelComboBox);
 
         var systemPromptLabel = new Label();
         systemPromptLabel.AutoSize = true;

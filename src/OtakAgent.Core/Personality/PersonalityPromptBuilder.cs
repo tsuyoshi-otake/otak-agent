@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using OtakAgent.Core.Configuration;
 
@@ -13,6 +14,11 @@ public sealed class PersonalityPromptBuilder
         }
 
         var builder = new StringBuilder();
+
+        // Add current time to the prompt
+        var currentTime = GetCurrentTimeString(settings.English);
+        builder.AppendLine(currentTime);
+        builder.AppendLine();
 
         if (settings.EnablePersonality)
         {
@@ -53,4 +59,20 @@ public sealed class PersonalityPromptBuilder
         "2000年代初頭のパソコン文化やOffice 97-2003の機能について懐かしく語ることがあります。" +
         "イルカとして海や水に関する比喩を使うことがあり、時々Office 2007以降で引退したことをネタにします。" +
         "明るく前向きで、少しおせっかいですが、どんな質問にも親身になって答えようとします。";
+
+    private static string GetCurrentTimeString(bool isEnglish)
+    {
+        if (isEnglish)
+        {
+            // Use UTC for English UI
+            var utcTime = DateTime.UtcNow;
+            return $"Current time (UTC): {utcTime:yyyy-MM-dd HH:mm:ss}";
+        }
+        else
+        {
+            // Use JST (UTC+9) for Japanese UI
+            var jstTime = DateTime.UtcNow.AddHours(9);
+            return $"現在時刻 (JST): {jstTime:yyyy年MM月dd日 HH:mm:ss}";
+        }
+    }
 }

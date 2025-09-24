@@ -177,7 +177,15 @@ public partial class SettingsForm : Form
         _hostTextBox.Text = _workingCopy.Host;
         _endpointTextBox.Text = _workingCopy.Endpoint;
         _apiKeyTextBox.Text = _workingCopy.ApiKey;
-        _modelTextBox.Text = _workingCopy.Model;
+        // Set the model in ComboBox
+        if (_modelComboBox.Items.Contains(_workingCopy.Model))
+        {
+            _modelComboBox.SelectedItem = _workingCopy.Model;
+        }
+        else
+        {
+            _modelComboBox.Text = _workingCopy.Model;
+        }
         _personalityOverrideTextBox.Text = _workingCopy.PersonalityOverride;
         _systemPromptTextBox.Text = _workingCopy.SystemPrompt;
         UpdatePersonalityEditors();
@@ -199,7 +207,7 @@ public partial class SettingsForm : Form
             _hostTextBox.PlaceholderText = "Host (e.g. api.openai.com)";
             _endpointTextBox.PlaceholderText = "Endpoint (e.g. /v1/chat/completions)";
             _apiKeyTextBox.PlaceholderText = "API Key";
-            _modelTextBox.PlaceholderText = "Model (e.g. gpt-4o-mini)";
+            // Model ComboBox already has items set in Designer
             _personalityOverrideTextBox.PlaceholderText = "Persona override (optional)";
             _systemPromptTextBox.PlaceholderText = "Additional system prompt";
             _addPresetButton.Text = "Add";
@@ -226,7 +234,7 @@ public partial class SettingsForm : Form
             _hostTextBox.PlaceholderText = "ホスト (例: api.openai.com)";
             _endpointTextBox.PlaceholderText = "エンドポイント (例: /v1/chat/completions)";
             _apiKeyTextBox.PlaceholderText = "API キー";
-            _modelTextBox.PlaceholderText = "モデル名";
+            // Model ComboBox already has items set in Designer
             _personalityOverrideTextBox.PlaceholderText = "人格プロンプト (任意)";
             _systemPromptTextBox.PlaceholderText = "追加のシステムプロンプト";
             _addPresetButton.Text = "追加";
@@ -252,7 +260,7 @@ public partial class SettingsForm : Form
         _workingCopy.Host = _hostTextBox.Text.Trim();
         _workingCopy.Endpoint = _endpointTextBox.Text.Trim();
         _workingCopy.ApiKey = _apiKeyTextBox.Text.Trim();
-        _workingCopy.Model = _modelTextBox.Text.Trim();
+        _workingCopy.Model = _modelComboBox.Text.Trim();
         _workingCopy.PersonalityOverride = _personalityOverrideTextBox.Text.Trim();
         _workingCopy.SystemPrompt = _systemPromptTextBox.Text.Trim();
 

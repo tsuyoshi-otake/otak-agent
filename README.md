@@ -1,176 +1,152 @@
 # otak-agent
 
-Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinForms application without native dependencies.
+クラシックなAgentTalkフローティングアシスタントを、ネイティブ依存関係のない単一の.NET 10 WinFormsアプリケーションに最新化しました。
 
-## Highlights
-- Targets `net10.0-windows` leveraging the latest .NET 10 RC features and performance improvements
-- Keeps the nostalgic Clippy/Kairu personas, floating window, and double Ctrl+C capture that defined AgentTalk
-- Simplifies deployment to one executable, JSON settings beside it, and optional history under `%AppData%/AgentTalk`
-- Features expandable text area with 5x vertical expansion for longer inputs
-- Interactive UI with right-click context menu and double-click bubble toggle
+## 主な特徴
+- .NET 10 RC1の最新機能とパフォーマンス改善を活用する`net10.0-windows`をターゲットとしています
+- AgentTalkの特徴であったClippy/Kairuペルソナ、フローティングウィンドウ、ダブルCtrl+Cキャプチャを維持しています
+- 1つの実行ファイル、隣接するJSON設定、オプションの履歴（`%AppData%/AgentTalk`）にデプロイメントを簡素化しました
+- より長い入力のための5倍垂直拡張機能を備えた拡張可能なテキストエリア
+- 右クリックコンテキストメニューとダブルクリックバブル切り替えによるインタラクティブUI
+- システムリソース（CPU/メモリ）使用率のリアルタイム監視
+- システムプロンプトプリセット機能（組み込みおよびカスタム）
+- GPT-5およびGPT-5 Codexモデルをサポート
 
-## Getting Started
-### Prerequisites
-- Windows 11 with desktop development tools enabled
-- .NET 10 SDK RC1 (10.0.100-rc.1 or later) - [Download](https://dotnet.microsoft.com/download/dotnet/10.0)
-- OpenAI-compatible API key (or equivalent endpoint) for chat completions
+## 始めるには
+### 前提条件
+- デスクトップ開発ツールが有効になったWindows 11
+- .NET 10 SDK RC1 (10.0.100-rc.1以降) - [ダウンロード](https://dotnet.microsoft.com/download/dotnet/10.0)
+- チャットコンプリーション用のOpenAI互換APIキー（または同等のエンドポイント）
 
-### Build & Run
-1. Install .NET 10 SDK RC1 if not already installed
-2. Restore and build the solution: `dotnet build otak-agent.sln`
-3. Run the WinForms front-end: `dotnet run --project src/OtakAgent.App`
-4. Publish for distribution: `dotnet publish -c Release -r win-x64 --self-contained false`
-5. Resources (GIF/PNG/WAV) are automatically copied from `src/OtakAgent.App/Resources` during build
+### ビルドと実行
+1. .NET 10 SDK RC1がインストールされていない場合はインストールします
+2. ソリューションをリストアしてビルド: `dotnet build otak-agent.sln`
+3. WinFormsフロントエンドを実行: `dotnet run --project src/OtakAgent.App`
+4. 配布用にパブリッシュ: `dotnet publish -c Release -r win-x64 --self-contained false`
+5. リソース（GIF/PNG/WAV）はビルド中に`src/OtakAgent.App/Resources`から自動的にコピーされます
 
-### Installation Options
+### インストールオプション
 
-#### Download Pre-built Packages
-- **GitHub Release**: Download from [Latest Release](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
-  - `otak-agent.msi` - Windows Installer (recommended)
-  - `otak-agent-portable.zip` - Portable version with Install/Uninstall scripts
+#### ビルド済みパッケージのダウンロード
+- **GitHubリリース**: [最新リリース](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)からダウンロード
+  - `otak-agent.msi` - Windowsインストーラー（推奨）
+  - `otak-agent-portable.zip` - インストール/アンインストールスクリプト付きポータブル版
 
-#### Install from Microsoft Store
-- Coming soon to Microsoft Store
+#### Microsoft Storeからインストール
+- Microsoft Storeで近日公開予定
 
-#### MSI Installation
-1. Download `otak-agent.msi` from releases
-2. Double-click to install
-3. Follow the installation wizard
+#### MSIインストール
+1. リリースから`otak-agent.msi`をダウンロード
+2. ダブルクリックしてインストール
+3. インストールウィザードに従う
 
-#### Portable Installation (ZIP)
-1. Download `otak-agent-portable.zip` from releases
-2. Extract the ZIP file
-3. Run `Install.bat` as Administrator for system-wide installation
-4. Or run `OtakAgent.App.exe` directly for portable use
+#### ポータブルインストール（ZIP）
+1. リリースから`otak-agent-portable.zip`をダウンロード
+2. ZIPファイルを解凍
+3. システム全体のインストールには管理者として`Install.bat`を実行
+4. またはポータブル使用のために`OtakAgent.App.exe`を直接実行
 
-To uninstall: Run `Uninstall.bat` as Administrator (for installed version)
+アンインストールするには: 管理者として`Uninstall.bat`を実行（インストール版の場合）
 
-### Building from Source
+### ソースからのビルド
 
-#### Creating MSIX Package for Microsoft Store
+#### Microsoft Store用MSIXパッケージの作成
 
-##### Prerequisites
-- Windows SDK installed (includes makeappx.exe)
-  - Install via: `winget install --id Microsoft.WindowsSDK.10.0.18362`
+##### 前提条件
+- Windows SDKがインストールされている（makeappx.exeを含む）
+  - 次のコマンドでインストール: `winget install --id Microsoft.WindowsSDK.10.0.18362`
 
-##### Step-by-Step Instructions
+##### 手順
 
-1. **Build Release Version**
+1. **リリース版をビルド**
    ```bash
    dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
    ```
 
-2. **Generate Store Assets** (if not already created)
+2. **Storeアセットを生成**（まだ作成されていない場合）
    ```powershell
    cd OtakAgent.Package
    powershell -ExecutionPolicy Bypass -File generate-assets.ps1
    cd ..
    ```
 
-3. **Create MSIX Structure**
+3. **MSIX構造を作成**
    ```powershell
    powershell -ExecutionPolicy Bypass -File create-simple-msix.ps1
    ```
 
-4. **Build MSIX Package**
+4. **MSIXパッケージをビルド**
    ```powershell
    powershell -ExecutionPolicy Bypass -File build-msix.ps1
    ```
 
-   Or manually:
+   または手動で:
    ```powershell
    & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /d OtakAgent_MSIX /p OtakAgent.msix /nv /o
    ```
 
-5. **Test Installation** (requires Developer Mode)
+5. **インストールをテスト**（開発者モードが必要）
    ```powershell
    Add-AppxPackage -Path OtakAgent.msix -AllowUnsigned
    ```
 
-#### Creating Portable Installer (ZIP)
-1. **Build and Create Installer**
+#### ポータブルインストーラー（ZIP）の作成
+1. **ビルドとインストーラーの作成**
    ```powershell
    dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
    powershell -ExecutionPolicy Bypass -File create-portable-installer.ps1
    ```
 
-2. **Output**: `otak-agent-portable.zip` containing:
-   - Application files
-   - `Install.bat` - Installer script
-   - `Uninstall.bat` - Uninstaller script
-   - `README.txt` - Instructions
+2. **出力**: 以下を含む`otak-agent-portable.zip`
+   - アプリケーションファイル
+   - `Install.bat` - インストーラースクリプト
+   - `Uninstall.bat` - アンインストーラースクリプト
+   - `README.txt` - 説明書
 
-#### Creating MSI Installer
-1. **Install WiX v6** (.NET tool)
+#### MSIインストーラーの作成
+1. **WiX v6のインストール**（.NETツール）
    ```bash
    dotnet tool install -g wix
    ```
 
-2. **Build and Create MSI**
+2. **MSIをビルドして作成**
    ```bash
    dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
    wix build simple-installer.wxs -o otak-agent.msi
    ```
 
-#### Microsoft Store Submission
-1. Upload `OtakAgent.msix` to [Partner Center](https://partner.microsoft.com/dashboard)
-2. Microsoft will automatically sign the package
-3. Fill in Store listing information
-4. Submit for certification
+#### Microsoft Storeへの提出
+1. [パートナーセンター](https://partner.microsoft.com/dashboard)に`OtakAgent.msix`をアップロード
+2. Microsoftが自動的にパッケージに署名します
+3. Storeリスト情報を入力
+4. 認定のために提出
 
-#### Package Contents
-- **OtakAgent.msix** (~49MB) contains:
-  - Main application executable
-  - AppxManifest.xml (package manifest)
-  - Store icons (Square, Wide, Splash Screen)
-  - Application resources (GIFs, WAVs, PNGs)
+## 設定
+- 設定は実行ファイルの隣に`agenttalk.settings.json`として存在し、`OtakAgent.Core`の`SettingsService`によって管理されます
+- 初回起動時、レガシーの`agenttalk.ini`と`SystemPrompt.ini`が検出されると`IniSettingsImporter`が移行します
+- 会話履歴はデフォルトでメモリに残り、オプションで`%AppData%/AgentTalk/history.json`に永続化できます
 
-### MSIX Package Status and Conclusion
+## デフォルト設定
+- **言語**: 日本語UIがデフォルト
+- **モデル**: GPT-5 Codexがデフォルト
+- **キャラクター人格**: 有効がデフォルト
+- **会話履歴**: 保持がデフォルト
 
-#### Current Status
-1. **Build with .NET 10 RC1** ✅ Successful
-   - Application builds and runs correctly
-   - Works without issues in development environment
+## サポートされているAIモデル
+- GPT-5シリーズ: GPT-5、GPT-5 Codex
+- GPT-4シリーズ: GPT-4.1
+- その他のOpenAI互換モデル
 
-2. **MSIX Package Creation** ✅ Successful
-   - Successfully packaged using makeappx.exe
-   - Files ready for Store submission
+## ペルソナとホットキー
+- `PersonalityPromptBuilder`は、人格が有効な場合にClippyとKairuのプロンプトを再構築し、カスタムペルソナテキストを許可します
+- `ClipboardHotkeyService`はダブルCtrl+Cジェスチャーをリッスンし、設定可能なデバウンスを適用し、クリップボードの内容をチャットに転送します
+- UIショートカットは元のAgentTalk体験を反映しています（Ctrl+Enterで送信、Ctrl+Backspaceでリセット、ダブルクリックで表示切り替え）
 
-3. **Local Installation** ❌ Certificate Error (0x80073D2C)
-   - Error: "Cannot verify publisher certificate for this app package"
-   - Issue persists even with:
-     - Developer Mode enabled
-     - Self-signed certificates
-     - Testing with .NET 9 (same error)
-
-#### Conclusion
-- **Microsoft Store Submission**: ✅ Ready
-  - Unsigned packages can be submitted to Store
-  - Microsoft automatically handles signing during publication
-  - Package `OtakAgent.msix` is ready for upload
-
-- **Local Testing**: ❌ Limited
-  - Cannot install locally due to certificate validation requirements
-  - Pre-submission testing must be done in development environment using `dotnet run`
-  - This is a known limitation for unsigned MSIX packages
-
-#### Note
-The certificate error (0x80073D2C) during local installation does not affect Microsoft Store distribution. Once the package is submitted and signed by Microsoft, users will be able to install it normally through the Store.
-
-## Configuration
-- Settings live beside the executable in `agenttalk.settings.json` and are managed by `SettingsService` in `OtakAgent.Core`.
-- On first launch, `IniSettingsImporter` migrates legacy `agenttalk.ini` and `SystemPrompt.ini` when detected.
-- Conversation history remains in memory by default and can optionally persist to `%AppData%/AgentTalk/history.json`.
-
-## Personas & Hotkeys
-- `PersonalityPromptBuilder` rebuilds the Clippy and Kairu prompts while allowing custom persona text when personalities are enabled.
-- `ClipboardHotkeyService` listens for the double Ctrl+C gesture, applies configurable debounce, and forwards clipboard content into chat.
-- UI shortcuts mirror the original AgentTalk experience (submit with Ctrl+Enter, reset with Ctrl+Backspace, toggle visibility with double-click).
-
-## Project Structure
+## プロジェクト構造
 ```
 otak-agent/
-  AGENT.md
+  CLAUDE.md
+  README.md
   docs/
     modernization-architecture.md
     modernization-roadmap.md
@@ -178,21 +154,33 @@ otak-agent/
     OtakAgent.Core/
     OtakAgent.App/
   agent-talk-main/
+  OtakAgent.Package/
 ```
 
-- `OtakAgent.Core` hosts configuration, chat, personality, and hotkey services.
-- `OtakAgent.App` delivers the WinForms UI, dependency injection bootstrap, and resources.
-- `agent-talk-main/` retains the legacy codebase for behavior parity checks.
+- `OtakAgent.Core`: 設定、チャット、人格、ホットキーサービスをホスト
+- `OtakAgent.App`: WinForms UI、依存性注入ブートストラップ、リソースを提供
+- `agent-talk-main/`: 動作パリティチェック用のレガシーコードベースを保持
+- `OtakAgent.Package/`: Microsoft Store用のパッケージング資産
 
-## Development Notes
-- Unit tests for configuration import and prompt builder behavior are planned under `OtakAgent.Core.Tests`.
-- Trace logging and optional file logs will be added during the polish phase to aid diagnostics.
-- Publish builds use `dotnet publish` and produce a self-contained-ready folder for distribution.
+## 開発ノート
+- 設定インポートとプロンプトビルダー動作のユニットテストは`OtakAgent.Core.Tests`で計画されています
+- トレースロギングとオプションのファイルログは、診断を支援するためにポリッシュフェーズ中に追加されます
+- パブリッシュビルドは`dotnet publish`を使用し、配布用のセルフコンテンド対応フォルダーを生成します
 
-## Documentation
-- Architecture overview: `docs/modernization-architecture.md`.
-- Delivery plan and TODOs: `docs/modernization-roadmap.md`.
-- Agent operations quick guide: `AGENT.md`.
+## 技術仕様
+- **フレームワーク**: .NET 10 RC1 (10.0.100-rc.1以降)
+- **ターゲット**: net10.0-windows
+- **UI**: Windows Forms
+- **依存性注入**: Microsoft.Extensions.DependencyInjection
+- **JSON処理**: System.Text.Json
+- **HTTP通信**: System.Net.Http
 
-## Legacy Reference
-The original AgentTalk implementation (targeting .NET Framework 3.5 with a C++ bridge) remains in `agent-talk-main/` and can be used to compare UI or persona behaviors during modernization.
+## システム要件
+- **OS**: Windows 11
+- **アーキテクチャ**: x64、x86、ARM64
+- **ランタイム**: .NET 10ランタイム（self-containedビルドの場合は不要）
+- **メモリ**: 最小512MB RAM
+- **ストレージ**: 約50MBの空き容量
+
+## レガシー参照
+元のAgentTalk実装（C++ブリッジを使用した.NET Framework 3.5をターゲット）は`agent-talk-main/`に残っており、最新化中にUIや人格動作を比較するために使用できます。
