@@ -71,7 +71,8 @@ public partial class SettingsForm : Form
         _presetsListBox.Items.Clear();
         foreach (var preset in _presets)
         {
-            var displayName = preset.IsBuiltIn ? $"[Built-in] {preset.Name}" : preset.Name;
+            var builtInLabel = _workingCopy.English ? "[Built-in]" : "[組み込み]";
+            var displayName = preset.IsBuiltIn ? $"{builtInLabel} {preset.Name}" : preset.Name;
             _presetsListBox.Items.Add(displayName);
         }
     }
@@ -205,6 +206,8 @@ public partial class SettingsForm : Form
             _updatePresetButton.Text = "Update";
             _deletePresetButton.Text = "Delete";
             _applyPresetButton.Text = "Apply";
+            _presetNameLabel.Text = "Preset Name:";
+            _presetPromptLabel.Text = "Prompt:";
             _saveButton.Text = "Save";
             _cancelButton.Text = "Cancel";
             _resetDefaultsButton.Text = "Reset to Defaults";
@@ -230,6 +233,8 @@ public partial class SettingsForm : Form
             _updatePresetButton.Text = "更新";
             _deletePresetButton.Text = "削除";
             _applyPresetButton.Text = "適用";
+            _presetNameLabel.Text = "プリセット名:";
+            _presetPromptLabel.Text = "プロンプト:";
             _saveButton.Text = "保存";
             _cancelButton.Text = "キャンセル";
             _resetDefaultsButton.Text = "デフォルトに戻す";

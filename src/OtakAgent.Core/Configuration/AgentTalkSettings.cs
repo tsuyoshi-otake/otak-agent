@@ -4,7 +4,7 @@ namespace OtakAgent.Core.Configuration;
 
 public sealed class AgentTalkSettings
 {
-    public bool English { get; set; } = true;
+    public bool English { get; set; } = false;
     public bool ExpandedTextbox { get; set; }
     public bool EnablePersonality { get; set; } = true;
     public bool AutoCopyToClipboard { get; set; }
@@ -12,7 +12,7 @@ public sealed class AgentTalkSettings
     public string Host { get; set; } = "api.openai.com";
     public string Endpoint { get; set; } = "/v1/responses";
     public string ApiKey { get; set; } = string.Empty;
-    public string Model { get; set; } = "gpt-4.1";
+    public string Model { get; set; } = "gpt-5-codex";
     public string SystemPrompt { get; set; } = string.Empty;
     public string PersonalityOverride { get; set; } = string.Empty;
     public string LastUserMessage { get; set; } = string.Empty;

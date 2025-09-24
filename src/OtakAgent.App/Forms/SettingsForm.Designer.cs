@@ -28,7 +28,9 @@ partial class SettingsForm
 
     // Presets tab controls
     private ListBox _presetsListBox = null!;
+    private Label _presetNameLabel = null!;
     private TextBox _presetNameTextBox = null!;
+    private Label _presetPromptLabel = null!;
     private TextBox _presetPromptTextBox = null!;
     private Button _addPresetButton = null!;
     private Button _updatePresetButton = null!;
@@ -213,11 +215,11 @@ partial class SettingsForm
         _presetsTab.Controls.Add(_presetsListBox);
 
         // Preset name
-        var presetNameLabel = new Label();
-        presetNameLabel.AutoSize = true;
-        presetNameLabel.Location = new Point(16, 150);
-        presetNameLabel.Text = "Preset Name:";
-        _presetsTab.Controls.Add(presetNameLabel);
+        _presetNameLabel = new Label();
+        _presetNameLabel.AutoSize = true;
+        _presetNameLabel.Location = new Point(16, 150);
+        _presetNameLabel.Text = "Preset Name:";
+        _presetsTab.Controls.Add(_presetNameLabel);
 
         _presetNameTextBox.Location = new Point(16, 170);
         _presetNameTextBox.Size = new Size(320, 23);
@@ -225,11 +227,11 @@ partial class SettingsForm
         _presetsTab.Controls.Add(_presetNameTextBox);
 
         // Preset prompt
-        var presetPromptLabel = new Label();
-        presetPromptLabel.AutoSize = true;
-        presetPromptLabel.Location = new Point(16, 200);
-        presetPromptLabel.Text = "Prompt:";
-        _presetsTab.Controls.Add(presetPromptLabel);
+        _presetPromptLabel = new Label();
+        _presetPromptLabel.AutoSize = true;
+        _presetPromptLabel.Location = new Point(16, 200);
+        _presetPromptLabel.Text = "Prompt:";
+        _presetsTab.Controls.Add(_presetPromptLabel);
 
         _presetPromptTextBox.Location = new Point(16, 220);
         _presetPromptTextBox.Multiline = true;
