@@ -1,13 +1,13 @@
 ---
 layout: default
-title: OtakAgent - AI-powered Desktop Assistant
+title: otak-agent - AI-powered Desktop Assistant
 ---
 
-# OtakAgent
+# otak-agent
 
 Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinForms application without native dependencies.
 
-![OtakAgent Logo](https://raw.githubusercontent.com/tsuyoshi-otake/otak-agent/main/OtakAgent.Package/Images/StoreLogo.png)
+![otak-agent Logo](https://raw.githubusercontent.com/tsuyoshi-otake/otak-agent/main/OtakAgent.Package/Images/StoreLogo.png)
 
 ## Features
 
@@ -74,7 +74,7 @@ Need help? Found a bug? Have a feature request?
 
 ## Open Source
 
-OtakAgent is open source software licensed under the MIT License. Contributions are welcome!
+otak-agent is open source software licensed under the MIT License. Contributions are welcome!
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Privacy Policy - OtakAgent
+title: Privacy Policy - otak-agent
 ---
 
 # Privacy Policy
@@ -9,7 +9,7 @@ title: Privacy Policy - OtakAgent
 
 ## Overview
 
-OtakAgent ("the Application") is committed to protecting your privacy. This Privacy Policy explains how we handle your information when you use our desktop assistant application.
+otak-agent ("the Application") is committed to protecting your privacy. This Privacy Policy explains how we handle your information when you use our desktop assistant application.
 
 ## Information We Collect
 
