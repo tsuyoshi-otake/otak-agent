@@ -67,7 +67,7 @@ public sealed class SystemPromptPreset
                 {
                     Id = "default-assistant",
                     Name = "デフォルトアシスタント",
-                    Prompt = "あなたは親切なアシスタントです。",
+                    Prompt = "あなたは親切なアシスタントです。マークダウンではなくテキストで簡潔に回答してください。",
                     IsBuiltIn = true
                 },
                 new()

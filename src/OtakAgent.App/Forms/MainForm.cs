@@ -19,12 +19,6 @@ namespace OtakAgent.App.Forms;
 
 public partial class MainForm : Form
 {
-    // P/Invoke for clipboard hotkey detection
-    [DllImport("user32.dll")]
-    private static extern short GetAsyncKeyState(int vKey);
-
-    private const int VK_CONTROL = 0x11;
-    private const int VK_C = 0x43;
 
     private readonly SettingsService _settingsService;
     private readonly ChatService _chatService;
@@ -34,11 +28,6 @@ public partial class MainForm : Form
     private const int MaxHistoryItems = 100; // Prevent unbounded growth
     private readonly System.Windows.Forms.Timer _animationTimer;
     private readonly System.Windows.Forms.Timer _resourceUpdateTimer;
-    private readonly System.Windows.Forms.Timer _clipboardHotkeyTimer;
-
-    // Clipboard hotkey tracking
-    private DateTime _lastCtrlCPress = DateTime.MinValue;
-    private bool _ctrlCWasPressed = false;
 
     private static readonly Color BubbleFillColor = Color.FromArgb(255, 255, 206);
     private static readonly Color MagentaColorKey = Color.Magenta;
@@ -93,9 +82,6 @@ public partial class MainForm : Form
         _resourceUpdateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
         _resourceUpdateTimer.Tick += OnResourceUpdateTimerTick;
 
-        _clipboardHotkeyTimer = new System.Windows.Forms.Timer { Interval = 50 };
-        _clipboardHotkeyTimer.Tick += OnClipboardHotkeyTimerTick;
-
         _systemResourceService.ResourcesUpdated += OnSystemResourcesUpdated;
 
         Controls.SetChildIndex(_characterPicture, 0);
@@ -137,13 +123,6 @@ public partial class MainForm : Form
             _systemResourceService.StartMonitoring();
             _resourceUpdateTimer.Start();
 
-            // Start clipboard hotkey monitoring if enabled
-            System.Diagnostics.Debug.WriteLine($"ClipboardHotkeyEnabled: {_settings.ClipboardHotkeyEnabled}, Interval: {_settings.ClipboardHotkeyIntervalMs}ms");
-            if (_settings.ClipboardHotkeyEnabled)
-            {
-                _clipboardHotkeyTimer.Start();
-                System.Diagnostics.Debug.WriteLine("Clipboard hotkey timer started");
-            }
 
             // Set initial tooltip with resource info
             UpdateSystemTrayTooltip();
@@ -792,68 +771,6 @@ public partial class MainForm : Form
         UpdateSystemTrayTooltip();
     }
 
-    private void OnClipboardHotkeyTimerTick(object? sender, EventArgs e)
-    {
-        // Check if Ctrl+C is currently pressed
-        short ctrlState = GetAsyncKeyState(VK_CONTROL);
-        short cState = GetAsyncKeyState(VK_C);
-        bool ctrlPressed = (ctrlState & 0x8000) != 0;
-        bool cPressed = (cState & 0x8000) != 0;
-
-        if (ctrlPressed && cPressed)
-        {
-            if (!_ctrlCWasPressed)
-            {
-                _ctrlCWasPressed = true;
-                var now = DateTime.Now;
-                System.Diagnostics.Debug.WriteLine($"Ctrl+C detected at {now:HH:mm:ss.fff}");
-
-                // Check if this is a double Ctrl+C within the configured interval
-                if ((now - _lastCtrlCPress).TotalMilliseconds <= _settings.ClipboardHotkeyIntervalMs)
-                {
-                    // Double Ctrl+C detected - paste clipboard content and send
-                    System.Diagnostics.Debug.WriteLine($"Double Ctrl+C detected! Interval: {(now - _lastCtrlCPress).TotalMilliseconds}ms");
-                    _lastCtrlCPress = DateTime.MinValue; // Reset to prevent triple detection
-                    BeginInvoke(() => HandleClipboardHotkey());
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"First Ctrl+C, waiting for second. Interval setting: {_settings.ClipboardHotkeyIntervalMs}ms");
-                    _lastCtrlCPress = now;
-                }
-            }
-        }
-        else
-        {
-            _ctrlCWasPressed = false;
-        }
-    }
-
-    private async void HandleClipboardHotkey()
-    {
-        try
-        {
-            if (Clipboard.ContainsText())
-            {
-                var clipboardText = Clipboard.GetText();
-                if (!string.IsNullOrWhiteSpace(clipboardText))
-                {
-                    // Clear placeholder if needed
-                    ClearPlaceholderIfNeeded();
-
-                    // Set the clipboard text
-                    _inputTextBox.Text = clipboardText;
-
-                    // Send the message
-                    await HandleSendButtonClickAsync().ConfigureAwait(false);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Clipboard hotkey error: {ex.Message}");
-        }
-    }
 
     private void OnSystemResourcesUpdated(object? sender, ResourceUpdateEventArgs e)
     {
@@ -1039,8 +956,6 @@ public partial class MainForm : Form
         _animationTimer.Dispose();
         _resourceUpdateTimer.Stop();
         _resourceUpdateTimer.Dispose();
-        _clipboardHotkeyTimer.Stop();
-        _clipboardHotkeyTimer.Dispose();
         _systemResourceService.StopMonitoring();
         if (_systemResourceService is IDisposable disposable)
         {
