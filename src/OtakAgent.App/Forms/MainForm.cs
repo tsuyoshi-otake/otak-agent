@@ -409,7 +409,7 @@ public partial class MainForm : Form
             return;
         }
 
-        if (_sendButton.Text == ContinueText())
+        if (_sendButton.Text == InputButtonText())
         {
             EnterInputMode(clearText: true);
             return;
@@ -486,7 +486,9 @@ public partial class MainForm : Form
                 {
                     _promptLabel.Text = _settings.English ? "Here is the response!" : "回答が届いたよ！";
                     _inputTextBox.Text = response;
-                    _sendButton.Text = ContinueText();
+                    _inputTextBox.ReadOnly = true;
+                    _inputTextBox.BackColor = SystemColors.Control;
+                    _sendButton.Text = InputButtonText();
                     _secondaryButton.Text = ResetButtonText();
                     UpdateTooltips();
                 });
@@ -495,7 +497,9 @@ public partial class MainForm : Form
             {
                 _promptLabel.Text = _settings.English ? "Here is the response!" : "回答が届いたよ！";
                 _inputTextBox.Text = response;
-                _sendButton.Text = ContinueText();
+                _inputTextBox.ReadOnly = true;
+                _inputTextBox.BackColor = SystemColors.Control;
+                _sendButton.Text = InputButtonText();
                 _secondaryButton.Text = ResetButtonText();
                 UpdateTooltips();
             }
@@ -706,8 +710,8 @@ public partial class MainForm : Form
 
     private void UpdateTooltips()
     {
-        var sendTooltip = _sendButton.Text == ContinueText()
-            ? (_settings.English ? "Continue (Ctrl+Enter)" : "続ける (Ctrl+Enter)")
+        var sendTooltip = _sendButton.Text == InputButtonText()
+            ? (_settings.English ? "Enter new message" : "新しいメッセージを入力")
             : (_settings.English ? "Send (Ctrl+Enter)" : "送信 (Ctrl+Enter)");
         _toolTip.SetToolTip(_sendButton, sendTooltip);
 
@@ -925,7 +929,7 @@ public partial class MainForm : Form
         var presetsMenuItem = new ToolStripMenuItem(_settings.English ? "System Prompt Presets" : "システムプロンプトプリセット");
 
         // Add built-in presets
-        var builtInPresets = SystemPromptPreset.GetBuiltInPresets();
+        var builtInPresets = SystemPromptPreset.GetBuiltInPresets(_settings.English);
         foreach (var preset in builtInPresets)
         {
             var builtInLabel = _settings.English ? "[Built-in]" : "[組み込み]";
@@ -1231,7 +1235,7 @@ public partial class MainForm : Form
     private string GetResourcePath(string fileName) => Path.Combine(AppContext.BaseDirectory, "Resources", fileName);
 
     private string SendText() => _settings.English ? "Send" : "送信";
-    private string ContinueText() => _settings.English ? "Continue" : "続ける";
+    private string InputButtonText() => _settings.English ? "Input" : "入力";
     private string ResetButtonText() => _settings.English ? "Reset" : "リセット";
     private string OptionsText() => _settings.English ? "Settings" : "設定";
     private string ProcessingText() => _settings.English ? "Processing..." : "処理中...";

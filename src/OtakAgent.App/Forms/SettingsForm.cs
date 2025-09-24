@@ -27,7 +27,11 @@ public partial class SettingsForm : Form
         _cancelButton.Click += (_, _) => { DialogResult = DialogResult.Cancel; Close(); };
         _resetDefaultsButton.Click += (_, _) => ResetToDefaults();
         _enablePersonalityCheckBox.CheckedChanged += (_, _) => UpdatePersonalityEditors();
-        _englishCheckBox.CheckedChanged += (_, _) => ApplyLocalization();
+        _englishCheckBox.CheckedChanged += (_, _) =>
+        {
+            ApplyLocalization();
+            LoadPresets();  // Reload presets with new language
+        };
 
         // Preset management event handlers
         _addPresetButton.Click += AddPresetButton_Click;
@@ -51,7 +55,7 @@ public partial class SettingsForm : Form
         _presets.Clear();
 
         // Load built-in presets
-        _presets.AddRange(SystemPromptPreset.GetBuiltInPresets());
+        _presets.AddRange(SystemPromptPreset.GetBuiltInPresets(_workingCopy.English));
 
         // Load user presets
         if (_workingCopy.SystemPromptPresets != null && _workingCopy.SystemPromptPresets.Count > 0)
