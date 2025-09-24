@@ -20,14 +20,11 @@ Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinFo
 
 ## Download
 
-### Direct Download
-- [**Download MSI Installer**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest/download/otak-agent.msi) - Windows Installer (Recommended)
-- [**Download Portable ZIP**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest/download/otak-agent-portable.zip) - No installation required
+[**Download Latest Release**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
 
-### Microsoft Store
-[![Get it from Microsoft Store](https://developer.microsoft.com/store/badges/images/English_get-it-from-MS.png)](https://www.microsoft.com/store/apps/otak-agent) *(Coming Soon)*
-
-Or view all releases on [GitHub Releases](https://github.com/tsuyoshi-otake/otak-agent/releases).
+Available packages:
+- **otak-agent.msi** - Windows Installer (Recommended)
+- **otak-agent-portable.zip** - Portable version (No installation required)
 
 ## System Requirements
 
