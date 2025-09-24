@@ -6,7 +6,7 @@ public sealed class AgentTalkSettings
 {
     public bool English { get; set; } = true;
     public bool ExpandedTextbox { get; set; }
-    public bool EnablePersonality { get; set; }
+    public bool EnablePersonality { get; set; } = true;
     public bool AutoCopyToClipboard { get; set; }
     public bool UseConversationHistory { get; set; } = true;
     public string Host { get; set; } = "api.openai.com";
