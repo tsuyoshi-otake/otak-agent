@@ -75,6 +75,7 @@ public partial class MainForm : Form
         _characterPicture.MouseMove += BubblePanel_MouseMove;
         _characterPicture.MouseDoubleClick += (_, _) => _bubblePanel.Visible = !_bubblePanel.Visible;
         _characterPicture.MouseUp += CharacterPicture_MouseUp;
+        _notifyContextMenu.Opening += (_, _) => UpdateContextMenu();
 
         _animationTimer = new System.Windows.Forms.Timer { Interval = 1400 };
         _animationTimer.Tick += OnAnimationTimerTick;
@@ -104,6 +105,7 @@ public partial class MainForm : Form
                 Invoke(() =>
                 {
                     ApplyLocalization();
+                    UpdateContextMenu();
                     LoadAssets();
                     PositionWindow();
                     PositionCharacter();
@@ -113,6 +115,7 @@ public partial class MainForm : Form
             else
             {
                 ApplyLocalization();
+                UpdateContextMenu();
                 LoadAssets();
                 PositionWindow();
                 PositionCharacter();
@@ -149,8 +152,6 @@ public partial class MainForm : Form
 
         _sendButton.Text = SendText();
         _secondaryButton.Text = OptionsText();
-        _notifyToggleTopMostMenuItem.Text = _settings.English ? "Always on Top" : "常に手前に表示";
-        _notifyExitMenuItem.Text = _settings.English ? "Exit" : "終了";
         _toolTip.SetToolTip(_characterPicture, _settings.English ? "Double-click to bring otak-agent to front" : "ダブルクリックでotak-agentを手前に表示");
     }
     private void ApplyBubbleLayout()
@@ -469,6 +470,7 @@ public partial class MainForm : Form
                     _inputTextBox.BackColor = SystemColors.Control;
                     _sendButton.Text = InputButtonText();
                     _secondaryButton.Text = ResetButtonText();
+                    _processingOriginalSendText = null; // Clear to prevent EndProcessing from overwriting
                     UpdateTooltips();
                 });
             }
@@ -480,6 +482,7 @@ public partial class MainForm : Form
                 _inputTextBox.BackColor = SystemColors.Control;
                 _sendButton.Text = InputButtonText();
                 _secondaryButton.Text = ResetButtonText();
+                _processingOriginalSendText = null; // Clear to prevent EndProcessing from overwriting
                 UpdateTooltips();
             }
 
@@ -629,6 +632,7 @@ public partial class MainForm : Form
             {
                 _settings = settingsForm.UpdatedSettings;
                 ApplyLocalization();
+                UpdateContextMenu();
                 LoadAssets();
                 UpdateTooltips();
             }
@@ -834,13 +838,14 @@ public partial class MainForm : Form
     {
         if (e.Button == MouseButtons.Right)
         {
-            ShowPresetContextMenu(e.Location);
+            UpdateContextMenu();
+            _notifyContextMenu.Show(_characterPicture, e.Location);
         }
     }
 
-    private void ShowPresetContextMenu(Point location)
+    private void UpdateContextMenu()
     {
-        var contextMenu = new ContextMenuStrip();
+        _notifyContextMenu.Items.Clear();
 
         // Add "System Prompt Presets" submenu
         var presetsMenuItem = new ToolStripMenuItem(_settings.English ? "System Prompt Presets" : "システムプロンプトプリセット");
@@ -888,29 +893,25 @@ public partial class MainForm : Form
             }
         }
 
-        contextMenu.Items.Add(presetsMenuItem);
-        contextMenu.Items.Add(new ToolStripSeparator());
+        _notifyContextMenu.Items.Add(presetsMenuItem);
+        _notifyContextMenu.Items.Add(new ToolStripSeparator());
 
         // Add Settings option
         var settingsMenuItem = new ToolStripMenuItem(_settings.English ? "Settings..." : "設定...");
         settingsMenuItem.Click += (_, _) => ShowSettingsDialogSync();
-        contextMenu.Items.Add(settingsMenuItem);
+        _notifyContextMenu.Items.Add(settingsMenuItem);
 
         // Add separator
-        contextMenu.Items.Add(new ToolStripSeparator());
+        _notifyContextMenu.Items.Add(new ToolStripSeparator());
 
-        // Add Always on Top option
-        var topMostMenuItem = new ToolStripMenuItem(_settings.English ? "Always on Top" : "常に手前に表示");
-        topMostMenuItem.Checked = TopMost;
-        topMostMenuItem.Click += (_, _) => TopMost = !TopMost;
-        contextMenu.Items.Add(topMostMenuItem);
+        // Update the existing Always on Top menu item
+        _notifyToggleTopMostMenuItem.Text = _settings.English ? "Always on Top" : "常に手前に表示";
+        _notifyToggleTopMostMenuItem.Checked = TopMost;
+        _notifyContextMenu.Items.Add(_notifyToggleTopMostMenuItem);
 
-        // Add Exit option
-        var exitMenuItem = new ToolStripMenuItem(_settings.English ? "Exit" : "終了");
-        exitMenuItem.Click += (_, _) => Close();
-        contextMenu.Items.Add(exitMenuItem);
-
-        contextMenu.Show(_characterPicture, location);
+        // Update the existing Exit menu item
+        _notifyExitMenuItem.Text = _settings.English ? "Exit" : "終了";
+        _notifyContextMenu.Items.Add(_notifyExitMenuItem);
     }
 
     private async void ApplyPreset(SystemPromptPreset preset)

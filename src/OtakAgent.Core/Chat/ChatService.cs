@@ -146,7 +146,8 @@ public sealed class ChatService
     private static bool IsResponsesApiModel(string model)
     {
         var lowerModel = model?.ToLowerInvariant() ?? string.Empty;
-        return lowerModel.Contains("gpt-4.1") ||
+        return lowerModel.Contains("gpt-5") ||
+               lowerModel.Contains("gpt-4.1") ||
                lowerModel.Contains("gpt-4o") ||
                lowerModel.StartsWith("o1") ||
                lowerModel.StartsWith("o3");
