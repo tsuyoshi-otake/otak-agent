@@ -38,15 +38,6 @@ internal static class ServiceConfigurator
         .AddPolicyHandler(GetRetryPolicy())
         .AddPolicyHandler(GetCircuitBreakerPolicy());
 
-        // Configure HttpClient for ModernChatService with longer timeout
-        services.AddHttpClient<ModernChatService>("ModernChatAPI", client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(60); // Longer timeout for reasoning models
-            client.DefaultRequestHeaders.Add("User-Agent", "OtakAgent/1.0");
-        })
-        .ConfigurePrimaryHttpMessageHandler(() => CreateHttpMessageHandler())
-        .AddPolicyHandler(GetRetryPolicy())
-        .AddPolicyHandler(GetCircuitBreakerPolicy());
 
         services.AddSingleton<PersonalityPromptBuilder>();
         services.AddSingleton<ISystemResourceService, SystemResourceService>();

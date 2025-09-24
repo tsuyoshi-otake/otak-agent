@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace OtakAgent.Core.Configuration;
 
 public sealed class AgentTalkSettings
@@ -17,6 +19,8 @@ public sealed class AgentTalkSettings
     public string PersonalityOverride { get; set; } = string.Empty;
     public string LastUserMessage { get; set; } = string.Empty;
     public bool EnableWebSearch { get; set; } = false;
+    public List<SystemPromptPreset> SystemPromptPresets { get; set; } = new();
+    public string SelectedPresetId { get; set; } = string.Empty;
 
     public static AgentTalkSettings CreateDefault() => new();
 }

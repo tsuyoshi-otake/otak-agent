@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Media;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,15 +19,26 @@ namespace OtakAgent.App.Forms;
 
 public partial class MainForm : Form
 {
+    // P/Invoke for clipboard hotkey detection
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
+
+    private const int VK_CONTROL = 0x11;
+    private const int VK_C = 0x43;
+
     private readonly SettingsService _settingsService;
     private readonly ChatService _chatService;
-    private readonly ModernChatService _modernChatService;
     private readonly PersonalityPromptBuilder _personalityPromptBuilder;
     private readonly ISystemResourceService _systemResourceService;
     private readonly List<ChatMessage> _history = new();
     private const int MaxHistoryItems = 100; // Prevent unbounded growth
     private readonly System.Windows.Forms.Timer _animationTimer;
     private readonly System.Windows.Forms.Timer _resourceUpdateTimer;
+    private readonly System.Windows.Forms.Timer _clipboardHotkeyTimer;
+
+    // Clipboard hotkey tracking
+    private DateTime _lastCtrlCPress = DateTime.MinValue;
+    private bool _ctrlCWasPressed = false;
 
     private static readonly Color BubbleFillColor = Color.FromArgb(255, 255, 206);
     private static readonly Color MagentaColorKey = Color.Magenta;
@@ -46,11 +58,10 @@ public partial class MainForm : Form
 
     private bool _isPlaceholderActive;
 
-    public MainForm(SettingsService settingsService, ChatService chatService, ModernChatService modernChatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService)
+    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService)
     {
         _settingsService = settingsService;
         _chatService = chatService;
-        _modernChatService = modernChatService;
         _personalityPromptBuilder = personalityPromptBuilder;
         _systemResourceService = systemResourceService;
 
@@ -74,12 +85,16 @@ public partial class MainForm : Form
         _characterPicture.MouseDown += CharacterPicture_MouseDown;
         _characterPicture.MouseMove += BubblePanel_MouseMove;
         _characterPicture.MouseDoubleClick += (_, _) => _bubblePanel.Visible = !_bubblePanel.Visible;
+        _characterPicture.MouseUp += CharacterPicture_MouseUp;
 
         _animationTimer = new System.Windows.Forms.Timer { Interval = 1400 };
         _animationTimer.Tick += OnAnimationTimerTick;
 
         _resourceUpdateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
         _resourceUpdateTimer.Tick += OnResourceUpdateTimerTick;
+
+        _clipboardHotkeyTimer = new System.Windows.Forms.Timer { Interval = 50 };
+        _clipboardHotkeyTimer.Tick += OnClipboardHotkeyTimerTick;
 
         _systemResourceService.ResourcesUpdated += OnSystemResourcesUpdated;
 
@@ -121,6 +136,14 @@ public partial class MainForm : Form
             // Start resource monitoring
             _systemResourceService.StartMonitoring();
             _resourceUpdateTimer.Start();
+
+            // Start clipboard hotkey monitoring if enabled
+            System.Diagnostics.Debug.WriteLine($"ClipboardHotkeyEnabled: {_settings.ClipboardHotkeyEnabled}, Interval: {_settings.ClipboardHotkeyIntervalMs}ms");
+            if (_settings.ClipboardHotkeyEnabled)
+            {
+                _clipboardHotkeyTimer.Start();
+                System.Diagnostics.Debug.WriteLine("Clipboard hotkey timer started");
+            }
 
             // Set initial tooltip with resource info
             UpdateSystemTrayTooltip();
@@ -425,7 +448,7 @@ public partial class MainForm : Form
                 systemPrompt = null;
             }
 
-            // Use ModernChatService for models that support the new endpoint
+            // ChatService automatically detects and uses the appropriate endpoint
             string response;
 
             // Use cancellation token with timeout to prevent freezing
@@ -433,22 +456,11 @@ public partial class MainForm : Form
 
             try
             {
-                if (ShouldUseModernService(_settings.Model))
-                {
-                    response = await _modernChatService.SendAsync(new ChatRequest(
-                        _settings,
-                        question,
-                        historySnapshot,
-                        systemPrompt), cts.Token).ConfigureAwait(false);
-                }
-                else
-                {
-                    response = await _chatService.SendAsync(new ChatRequest(
-                        _settings,
-                        question,
-                        historySnapshot,
-                        systemPrompt), cts.Token).ConfigureAwait(false);
-                }
+                response = await _chatService.SendAsync(new ChatRequest(
+                    _settings,
+                    question,
+                    historySnapshot,
+                    systemPrompt), cts.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -513,7 +525,7 @@ public partial class MainForm : Form
                     _promptLabel.Text = _settings.English ? "Network error occurred." : "ネットワークエラーが発生しました。";
                     _inputTextBox.ReadOnly = false;
                     _inputTextBox.BackColor = Color.White;
-                    BeginInvoke(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                    BeginInvoke(() => ErrorDialog.ShowError(this, ex.Message));
                     EnterInputMode(clearText: false);
                 });
             }
@@ -522,7 +534,7 @@ public partial class MainForm : Form
                 _promptLabel.Text = _settings.English ? "Network error occurred." : "ネットワークエラーが発生しました。";
                 _inputTextBox.ReadOnly = false;
                 _inputTextBox.BackColor = Color.White;
-                Task.Run(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                BeginInvoke(() => ErrorDialog.ShowError(this, ex.Message));
                 EnterInputMode(clearText: false);
             }
         }
@@ -536,7 +548,7 @@ public partial class MainForm : Form
                     _promptLabel.Text = _settings.English ? "Configuration error." : "設定エラーです。";
                     _inputTextBox.ReadOnly = false;
                     _inputTextBox.BackColor = Color.White;
-                    BeginInvoke(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning));
+                    BeginInvoke(() => ErrorDialog.ShowWarning(this, ex.Message));
                     EnterInputMode(clearText: false);
                 });
             }
@@ -545,7 +557,7 @@ public partial class MainForm : Form
                 _promptLabel.Text = _settings.English ? "Configuration error." : "設定エラーです。";
                 _inputTextBox.ReadOnly = false;
                 _inputTextBox.BackColor = Color.White;
-                Task.Run(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Warning));
+                BeginInvoke(() => ErrorDialog.ShowWarning(this, ex.Message));
                 EnterInputMode(clearText: false);
             }
         }
@@ -559,7 +571,7 @@ public partial class MainForm : Form
                     _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
                     _inputTextBox.ReadOnly = false;
                     _inputTextBox.BackColor = Color.White;
-                    BeginInvoke(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                    BeginInvoke(() => ErrorDialog.ShowError(this, ex.Message));
                     EnterInputMode(clearText: false);
                 });
             }
@@ -568,7 +580,7 @@ public partial class MainForm : Form
                 _promptLabel.Text = _settings.English ? "Something went wrong." : "エラーが発生しました。";
                 _inputTextBox.ReadOnly = false;
                 _inputTextBox.BackColor = Color.White;
-                Task.Run(() => MessageBox.Show(this, ex.Message, "AgentTalk", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                BeginInvoke(() => ErrorDialog.ShowError(this, ex.Message));
                 EnterInputMode(clearText: false);
             }
         }
@@ -776,6 +788,69 @@ public partial class MainForm : Form
         UpdateSystemTrayTooltip();
     }
 
+    private void OnClipboardHotkeyTimerTick(object? sender, EventArgs e)
+    {
+        // Check if Ctrl+C is currently pressed
+        short ctrlState = GetAsyncKeyState(VK_CONTROL);
+        short cState = GetAsyncKeyState(VK_C);
+        bool ctrlPressed = (ctrlState & 0x8000) != 0;
+        bool cPressed = (cState & 0x8000) != 0;
+
+        if (ctrlPressed && cPressed)
+        {
+            if (!_ctrlCWasPressed)
+            {
+                _ctrlCWasPressed = true;
+                var now = DateTime.Now;
+                System.Diagnostics.Debug.WriteLine($"Ctrl+C detected at {now:HH:mm:ss.fff}");
+
+                // Check if this is a double Ctrl+C within the configured interval
+                if ((now - _lastCtrlCPress).TotalMilliseconds <= _settings.ClipboardHotkeyIntervalMs)
+                {
+                    // Double Ctrl+C detected - paste clipboard content and send
+                    System.Diagnostics.Debug.WriteLine($"Double Ctrl+C detected! Interval: {(now - _lastCtrlCPress).TotalMilliseconds}ms");
+                    _lastCtrlCPress = DateTime.MinValue; // Reset to prevent triple detection
+                    BeginInvoke(() => HandleClipboardHotkey());
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"First Ctrl+C, waiting for second. Interval setting: {_settings.ClipboardHotkeyIntervalMs}ms");
+                    _lastCtrlCPress = now;
+                }
+            }
+        }
+        else
+        {
+            _ctrlCWasPressed = false;
+        }
+    }
+
+    private async void HandleClipboardHotkey()
+    {
+        try
+        {
+            if (Clipboard.ContainsText())
+            {
+                var clipboardText = Clipboard.GetText();
+                if (!string.IsNullOrWhiteSpace(clipboardText))
+                {
+                    // Clear placeholder if needed
+                    ClearPlaceholderIfNeeded();
+
+                    // Set the clipboard text
+                    _inputTextBox.Text = clipboardText;
+
+                    // Send the message
+                    await HandleSendButtonClickAsync().ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Clipboard hotkey error: {ex.Message}");
+        }
+    }
+
     private void OnSystemResourcesUpdated(object? sender, ResourceUpdateEventArgs e)
     {
         // This event is raised from the resource service background thread
@@ -832,10 +907,108 @@ public partial class MainForm : Form
         {
             _dragOffset = new Point(e.X, e.Y);
         }
-        else if (e.Button == MouseButtons.Right)
+    }
+
+    private void CharacterPicture_MouseUp(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Right)
         {
-            _notifyContextMenu.Show(_characterPicture, e.Location);
+            ShowPresetContextMenu(e.Location);
         }
+    }
+
+    private void ShowPresetContextMenu(Point location)
+    {
+        var contextMenu = new ContextMenuStrip();
+
+        // Add "System Prompt Presets" submenu
+        var presetsMenuItem = new ToolStripMenuItem(_settings.English ? "System Prompt Presets" : "システムプロンプトプリセット");
+
+        // Add built-in presets
+        var builtInPresets = SystemPromptPreset.GetBuiltInPresets();
+        foreach (var preset in builtInPresets)
+        {
+            var builtInLabel = _settings.English ? "[Built-in]" : "[組み込み]";
+            var menuItem = new ToolStripMenuItem($"{builtInLabel} {preset.Name}");
+            var capturedPreset = preset;
+
+            // Check if this is the currently selected preset by comparing prompt content
+            if (!string.IsNullOrEmpty(_settings.SystemPrompt) && _settings.SystemPrompt == preset.Prompt)
+            {
+                menuItem.Checked = true;
+            }
+
+            menuItem.Click += (_, _) => ApplyPreset(capturedPreset);
+            presetsMenuItem.DropDownItems.Add(menuItem);
+        }
+
+        // Add user presets if any
+        if (_settings.SystemPromptPresets != null && _settings.SystemPromptPresets.Count > 0)
+        {
+            if (presetsMenuItem.DropDownItems.Count > 0)
+            {
+                presetsMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            }
+
+            foreach (var preset in _settings.SystemPromptPresets)
+            {
+                var menuItem = new ToolStripMenuItem(preset.Name);
+                var capturedPreset = preset;
+
+                // Check if this is the currently selected preset
+                if (!string.IsNullOrEmpty(_settings.SelectedPresetId) && _settings.SelectedPresetId == preset.Id)
+                {
+                    menuItem.Checked = true;
+                    menuItem.Font = new System.Drawing.Font(menuItem.Font, System.Drawing.FontStyle.Bold);
+                }
+
+                menuItem.Click += (_, _) => ApplyPreset(capturedPreset);
+                presetsMenuItem.DropDownItems.Add(menuItem);
+            }
+        }
+
+        contextMenu.Items.Add(presetsMenuItem);
+        contextMenu.Items.Add(new ToolStripSeparator());
+
+        // Add Settings option
+        var settingsMenuItem = new ToolStripMenuItem(_settings.English ? "Settings..." : "設定...");
+        settingsMenuItem.Click += (_, _) => ShowSettingsDialogSync();
+        contextMenu.Items.Add(settingsMenuItem);
+
+        // Add separator
+        contextMenu.Items.Add(new ToolStripSeparator());
+
+        // Add Always on Top option
+        var topMostMenuItem = new ToolStripMenuItem(_settings.English ? "Always on Top" : "常に手前に表示");
+        topMostMenuItem.Checked = TopMost;
+        topMostMenuItem.Click += (_, _) => TopMost = !TopMost;
+        contextMenu.Items.Add(topMostMenuItem);
+
+        // Add Exit option
+        var exitMenuItem = new ToolStripMenuItem(_settings.English ? "Exit" : "終了");
+        exitMenuItem.Click += (_, _) => Close();
+        contextMenu.Items.Add(exitMenuItem);
+
+        contextMenu.Show(_characterPicture, location);
+    }
+
+    private async void ApplyPreset(SystemPromptPreset preset)
+    {
+        _settings.SystemPrompt = preset.Prompt;
+        _settings.SelectedPresetId = preset.Id;
+
+        // Save settings to persist the change
+        await _settingsService.SaveAsync(_settings).ConfigureAwait(false);
+
+        // Show confirmation
+        var message = _settings.English
+            ? $"Applied preset: {preset.Name}"
+            : $"プリセットを適用しました: {preset.Name}";
+
+        BeginInvoke(() =>
+        {
+            _toolTip.Show(message, _characterPicture, 50, 50, 3000);
+        });
     }
 
     private void BubblePanel_MouseDown(object? sender, MouseEventArgs e)
@@ -862,6 +1035,8 @@ public partial class MainForm : Form
         _animationTimer.Dispose();
         _resourceUpdateTimer.Stop();
         _resourceUpdateTimer.Dispose();
+        _clipboardHotkeyTimer.Stop();
+        _clipboardHotkeyTimer.Dispose();
         _systemResourceService.StopMonitoring();
         if (_systemResourceService is IDisposable disposable)
         {
@@ -1061,14 +1236,6 @@ public partial class MainForm : Form
     private string OptionsText() => _settings.English ? "Settings" : "設定";
     private string ProcessingText() => _settings.English ? "Processing..." : "処理中...";
 
-    private bool ShouldUseModernService(string model)
-    {
-        // Use modern endpoint for newer models
-        return model.Contains("gpt-4o", StringComparison.OrdinalIgnoreCase) ||
-               model.Contains("o1", StringComparison.OrdinalIgnoreCase) ||
-               model.Contains("gpt-4.1", StringComparison.OrdinalIgnoreCase) ||
-               model.Contains("gpt-4-", StringComparison.OrdinalIgnoreCase);
-    }
 }
 
 

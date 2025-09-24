@@ -138,7 +138,7 @@ partial class MainForm
         //_notifyIcon
         //
         _notifyIcon.ContextMenuStrip = _notifyContextMenu;
-        _notifyIcon.Text = "AgentTalk";
+        _notifyIcon.Text = "otak-agent";
         _notifyIcon.Visible = true;
         //
         //_notifyContextMenu
@@ -186,7 +186,7 @@ partial class MainForm
         ShowIcon = false;
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.Manual;
-        Text = "AgentTalk";
+        Text = "otak-agent";
         TopMost = true;
         TransparencyKey = Color.Magenta;
         _bubblePanel.ResumeLayout(false);

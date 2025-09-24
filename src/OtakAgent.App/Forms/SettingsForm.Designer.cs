@@ -8,6 +8,11 @@ namespace OtakAgent.App.Forms;
 partial class SettingsForm
 {
     private IContainer? components = null;
+    private TabControl _tabControl = null!;
+    private TabPage _generalTab = null!;
+    private TabPage _presetsTab = null!;
+
+    // General tab controls
     private CheckBox _englishCheckBox = null!;
     private CheckBox _expandedTextboxCheckBox = null!;
     private CheckBox _enablePersonalityCheckBox = null!;
@@ -22,6 +27,17 @@ partial class SettingsForm
     private TextBox _systemPromptTextBox = null!;
     private TextBox _personalityOverrideTextBox = null!;
     private NumericUpDown _hotkeyIntervalNumeric = null!;
+
+    // Presets tab controls
+    private ListBox _presetsListBox = null!;
+    private TextBox _presetNameTextBox = null!;
+    private TextBox _presetPromptTextBox = null!;
+    private Button _addPresetButton = null!;
+    private Button _updatePresetButton = null!;
+    private Button _deletePresetButton = null!;
+    private Button _applyPresetButton = null!;
+
+    // Form buttons
     private Button _saveButton = null!;
     private Button _cancelButton = null!;
     private Button _resetDefaultsButton = null!;
@@ -38,6 +54,13 @@ partial class SettingsForm
     private void InitializeComponent()
     {
         components = new Container();
+
+        // Tab Control
+        _tabControl = new TabControl();
+        _generalTab = new TabPage();
+        _presetsTab = new TabPage();
+
+        // General tab controls
         _englishCheckBox = new CheckBox();
         _expandedTextboxCheckBox = new CheckBox();
         _enablePersonalityCheckBox = new CheckBox();
@@ -52,149 +75,262 @@ partial class SettingsForm
         _systemPromptTextBox = new TextBox();
         _personalityOverrideTextBox = new TextBox();
         _hotkeyIntervalNumeric = new NumericUpDown();
+
+        // Presets tab controls
+        _presetsListBox = new ListBox();
+        _presetNameTextBox = new TextBox();
+        _presetPromptTextBox = new TextBox();
+        _addPresetButton = new Button();
+        _updatePresetButton = new Button();
+        _deletePresetButton = new Button();
+        _applyPresetButton = new Button();
+
+        // Form buttons
+        _resetDefaultsButton = new Button();
         _saveButton = new Button();
         _cancelButton = new Button();
-        _resetDefaultsButton = new Button();
-        ((ISupportInitialize)_hotkeyIntervalNumeric).BeginInit();
+
         SuspendLayout();
+
+        // Tab Control
+        _tabControl.Location = new Point(12, 12);
+        _tabControl.Name = "_tabControl";
+        _tabControl.Size = new Size(360, 500);
+        _tabControl.TabIndex = 0;
+
+        // General Tab
+        _generalTab.Text = "General";
+        _generalTab.UseVisualStyleBackColor = true;
+        _generalTab.Padding = new Padding(3);
+
+        // Add controls to General tab
         _englishCheckBox.AutoSize = true;
-        _englishCheckBox.Location = new Point(18, 18);
-        _englishCheckBox.Name = "_englishCheckBox";
-        _englishCheckBox.Size = new Size(115, 19);
+        _englishCheckBox.Location = new Point(16, 20);
+        _englishCheckBox.Text = "English UI";
         _englishCheckBox.TabIndex = 0;
-        _englishCheckBox.Text = "Use English UI";
-        _englishCheckBox.UseVisualStyleBackColor = true;
+        _generalTab.Controls.Add(_englishCheckBox);
+
         _expandedTextboxCheckBox.AutoSize = true;
-        _expandedTextboxCheckBox.Location = new Point(18, 43);
-        _expandedTextboxCheckBox.Name = "_expandedTextboxCheckBox";
-        _expandedTextboxCheckBox.Size = new Size(171, 19);
+        _expandedTextboxCheckBox.Location = new Point(16, 44);
+        _expandedTextboxCheckBox.Text = "Expanded Textbox";
         _expandedTextboxCheckBox.TabIndex = 1;
-        _expandedTextboxCheckBox.Text = "Expanded input text area";
-        _expandedTextboxCheckBox.UseVisualStyleBackColor = true;
+        _generalTab.Controls.Add(_expandedTextboxCheckBox);
+
         _enablePersonalityCheckBox.AutoSize = true;
-        _enablePersonalityCheckBox.Location = new Point(18, 68);
-        _enablePersonalityCheckBox.Name = "_enablePersonalityCheckBox";
-        _enablePersonalityCheckBox.Size = new Size(168, 19);
+        _enablePersonalityCheckBox.Location = new Point(16, 68);
+        _enablePersonalityCheckBox.Text = "Enable Personality";
         _enablePersonalityCheckBox.TabIndex = 2;
-        _enablePersonalityCheckBox.Text = "Enable Clippy/Kairu persona";
-        _enablePersonalityCheckBox.UseVisualStyleBackColor = true;
+        _generalTab.Controls.Add(_enablePersonalityCheckBox);
+
         _autoCopyCheckBox.AutoSize = true;
-        _autoCopyCheckBox.Location = new Point(18, 93);
-        _autoCopyCheckBox.Name = "_autoCopyCheckBox";
-        _autoCopyCheckBox.Size = new Size(207, 19);
+        _autoCopyCheckBox.Location = new Point(16, 92);
+        _autoCopyCheckBox.Text = "Auto-copy to Clipboard";
         _autoCopyCheckBox.TabIndex = 3;
-        _autoCopyCheckBox.Text = "Auto-copy responses to clipboard";
-        _autoCopyCheckBox.UseVisualStyleBackColor = true;
+        _generalTab.Controls.Add(_autoCopyCheckBox);
+
         _historyCheckBox.AutoSize = true;
-        _historyCheckBox.Location = new Point(18, 118);
-        _historyCheckBox.Name = "_historyCheckBox";
-        _historyCheckBox.Size = new Size(181, 19);
+        _historyCheckBox.Location = new Point(16, 116);
+        _historyCheckBox.Text = "Use Conversation History";
         _historyCheckBox.TabIndex = 4;
-        _historyCheckBox.Text = "Keep conversation history";
-        _historyCheckBox.UseVisualStyleBackColor = true;
+        _generalTab.Controls.Add(_historyCheckBox);
+
         _hotkeyCheckBox.AutoSize = true;
-        _hotkeyCheckBox.Location = new Point(18, 143);
-        _hotkeyCheckBox.Name = "_hotkeyCheckBox";
-        _hotkeyCheckBox.Size = new Size(245, 19);
+        _hotkeyCheckBox.Location = new Point(16, 140);
+        _hotkeyCheckBox.Text = "Enable Clipboard Hotkey (Ctrl+C x2)";
         _hotkeyCheckBox.TabIndex = 5;
-        _hotkeyCheckBox.Text = "Enable double Ctrl+C clipboard hotkey";
-        _hotkeyCheckBox.UseVisualStyleBackColor = true;
-        _webSearchCheckBox.AutoSize = true;
-        _webSearchCheckBox.Location = new Point(18, 168);
-        _webSearchCheckBox.Name = "_webSearchCheckBox";
-        _webSearchCheckBox.Size = new Size(120, 19);
-        _webSearchCheckBox.TabIndex = 6;
-        _webSearchCheckBox.Text = "Enable Web Search";
-        _webSearchCheckBox.UseVisualStyleBackColor = true;
-        _hotkeyIntervalNumeric.Increment = new decimal(new int[] { 50, 0, 0, 0 });
-        _hotkeyIntervalNumeric.Location = new Point(280, 141);
-        _hotkeyIntervalNumeric.Maximum = new decimal(new int[] { 2000, 0, 0, 0 });
-        _hotkeyIntervalNumeric.Minimum = new decimal(new int[] { 100, 0, 0, 0 });
-        _hotkeyIntervalNumeric.Name = "_hotkeyIntervalNumeric";
-        _hotkeyIntervalNumeric.Size = new Size(80, 23);
+        _generalTab.Controls.Add(_hotkeyCheckBox);
+
+        _hotkeyIntervalNumeric.Location = new Point(240, 138);
+        _hotkeyIntervalNumeric.Maximum = 2000;
+        _hotkeyIntervalNumeric.Minimum = 100;
+        _hotkeyIntervalNumeric.Size = new Size(60, 23);
         _hotkeyIntervalNumeric.TabIndex = 6;
-        _hotkeyIntervalNumeric.Value = new decimal(new int[] { 500, 0, 0, 0 });
-        _hostTextBox.Location = new Point(18, 192);
-        _hostTextBox.Name = "_hostTextBox";
-        _hostTextBox.PlaceholderText = "Host (e.g. api.openai.com)";
-        _hostTextBox.Size = new Size(342, 23);
-        _hostTextBox.TabIndex = 7;
-        _endpointTextBox.Location = new Point(18, 221);
-        _endpointTextBox.Name = "_endpointTextBox";
-        _endpointTextBox.PlaceholderText = "Endpoint (e.g. /v1/chat/completions)";
-        _endpointTextBox.Size = new Size(342, 23);
-        _endpointTextBox.TabIndex = 8;
-        _apiKeyTextBox.Location = new Point(18, 250);
-        _apiKeyTextBox.Name = "_apiKeyTextBox";
-        _apiKeyTextBox.PlaceholderText = "API Key";
-        _apiKeyTextBox.Size = new Size(342, 23);
-        _apiKeyTextBox.TabIndex = 9;
-        _apiKeyTextBox.UseSystemPasswordChar = true;
-        _modelTextBox.Location = new Point(18, 279);
-        _modelTextBox.Name = "_modelTextBox";
-        _modelTextBox.PlaceholderText = "Model (e.g. gpt-4o-mini)";
-        _modelTextBox.Size = new Size(342, 23);
-        _modelTextBox.TabIndex = 10;
-        _personalityOverrideTextBox.Location = new Point(18, 316);
-        _personalityOverrideTextBox.Multiline = true;
-        _personalityOverrideTextBox.Name = "_personalityOverrideTextBox";
-        _personalityOverrideTextBox.PlaceholderText = "Persona override (optional)";
-        _personalityOverrideTextBox.ScrollBars = ScrollBars.Vertical;
-        _personalityOverrideTextBox.Size = new Size(342, 72);
-        _personalityOverrideTextBox.TabIndex = 11;
-        _systemPromptTextBox.Location = new Point(18, 408);
+        _hotkeyIntervalNumeric.Value = 500;
+        _generalTab.Controls.Add(_hotkeyIntervalNumeric);
+
+        var msLabel = new Label();
+        msLabel.AutoSize = true;
+        msLabel.Location = new Point(306, 140);
+        msLabel.Text = "ms";
+        _generalTab.Controls.Add(msLabel);
+
+        _webSearchCheckBox.AutoSize = true;
+        _webSearchCheckBox.Location = new Point(16, 164);
+        _webSearchCheckBox.Text = "Enable Web Search";
+        _webSearchCheckBox.TabIndex = 7;
+        _generalTab.Controls.Add(_webSearchCheckBox);
+
+        var hostLabel = new Label();
+        hostLabel.AutoSize = true;
+        hostLabel.Location = new Point(16, 196);
+        hostLabel.Text = "API Host:";
+        _generalTab.Controls.Add(hostLabel);
+
+        _hostTextBox.Location = new Point(16, 216);
+        _hostTextBox.Size = new Size(320, 23);
+        _hostTextBox.TabIndex = 8;
+        _generalTab.Controls.Add(_hostTextBox);
+
+        var endpointLabel = new Label();
+        endpointLabel.AutoSize = true;
+        endpointLabel.Location = new Point(16, 244);
+        endpointLabel.Text = "Endpoint:";
+        _generalTab.Controls.Add(endpointLabel);
+
+        _endpointTextBox.Location = new Point(16, 264);
+        _endpointTextBox.Size = new Size(320, 23);
+        _endpointTextBox.TabIndex = 9;
+        _generalTab.Controls.Add(_endpointTextBox);
+
+        var apiKeyLabel = new Label();
+        apiKeyLabel.AutoSize = true;
+        apiKeyLabel.Location = new Point(16, 292);
+        apiKeyLabel.Text = "API Key:";
+        _generalTab.Controls.Add(apiKeyLabel);
+
+        _apiKeyTextBox.Location = new Point(16, 312);
+        _apiKeyTextBox.PasswordChar = '*';
+        _apiKeyTextBox.Size = new Size(320, 23);
+        _apiKeyTextBox.TabIndex = 10;
+        _generalTab.Controls.Add(_apiKeyTextBox);
+
+        var modelLabel = new Label();
+        modelLabel.AutoSize = true;
+        modelLabel.Location = new Point(16, 340);
+        modelLabel.Text = "Model:";
+        _generalTab.Controls.Add(modelLabel);
+
+        _modelTextBox.Location = new Point(16, 360);
+        _modelTextBox.Size = new Size(320, 23);
+        _modelTextBox.TabIndex = 11;
+        _generalTab.Controls.Add(_modelTextBox);
+
+        var systemPromptLabel = new Label();
+        systemPromptLabel.AutoSize = true;
+        systemPromptLabel.Location = new Point(16, 388);
+        systemPromptLabel.Text = "System Prompt:";
+        _generalTab.Controls.Add(systemPromptLabel);
+
+        _systemPromptTextBox.Location = new Point(16, 408);
         _systemPromptTextBox.Multiline = true;
-        _systemPromptTextBox.Name = "_systemPromptTextBox";
-        _systemPromptTextBox.PlaceholderText = "Additional system prompt";
         _systemPromptTextBox.ScrollBars = ScrollBars.Vertical;
-        _systemPromptTextBox.Size = new Size(342, 96);
+        _systemPromptTextBox.Size = new Size(320, 60);
         _systemPromptTextBox.TabIndex = 12;
+        _generalTab.Controls.Add(_systemPromptTextBox);
+
+        // Personality override (hidden, small textbox)
+        _personalityOverrideTextBox.Location = new Point(300, 20);
+        _personalityOverrideTextBox.Size = new Size(10, 23);
+        _personalityOverrideTextBox.Visible = false;
+        _generalTab.Controls.Add(_personalityOverrideTextBox);
+
+        // Presets Tab
+        _presetsTab.Text = "Prompt Presets";
+        _presetsTab.UseVisualStyleBackColor = true;
+        _presetsTab.Padding = new Padding(3);
+
+        // Presets list
+        _presetsListBox.Location = new Point(16, 20);
+        _presetsListBox.Size = new Size(320, 120);
+        _presetsListBox.TabIndex = 0;
+        _presetsTab.Controls.Add(_presetsListBox);
+
+        // Preset name
+        var presetNameLabel = new Label();
+        presetNameLabel.AutoSize = true;
+        presetNameLabel.Location = new Point(16, 150);
+        presetNameLabel.Text = "Preset Name:";
+        _presetsTab.Controls.Add(presetNameLabel);
+
+        _presetNameTextBox.Location = new Point(16, 170);
+        _presetNameTextBox.Size = new Size(320, 23);
+        _presetNameTextBox.TabIndex = 1;
+        _presetsTab.Controls.Add(_presetNameTextBox);
+
+        // Preset prompt
+        var presetPromptLabel = new Label();
+        presetPromptLabel.AutoSize = true;
+        presetPromptLabel.Location = new Point(16, 200);
+        presetPromptLabel.Text = "Prompt:";
+        _presetsTab.Controls.Add(presetPromptLabel);
+
+        _presetPromptTextBox.Location = new Point(16, 220);
+        _presetPromptTextBox.Multiline = true;
+        _presetPromptTextBox.ScrollBars = ScrollBars.Vertical;
+        _presetPromptTextBox.Size = new Size(320, 180);
+        _presetPromptTextBox.TabIndex = 2;
+        _presetsTab.Controls.Add(_presetPromptTextBox);
+
+        // Preset buttons
+        _addPresetButton.Location = new Point(16, 410);
+        _addPresetButton.Size = new Size(75, 25);
+        _addPresetButton.Text = "Add";
+        _addPresetButton.TabIndex = 3;
+        _addPresetButton.UseVisualStyleBackColor = true;
+        _presetsTab.Controls.Add(_addPresetButton);
+
+        _updatePresetButton.Location = new Point(96, 410);
+        _updatePresetButton.Size = new Size(75, 25);
+        _updatePresetButton.Text = "Update";
+        _updatePresetButton.TabIndex = 4;
+        _updatePresetButton.UseVisualStyleBackColor = true;
+        _presetsTab.Controls.Add(_updatePresetButton);
+
+        _deletePresetButton.Location = new Point(176, 410);
+        _deletePresetButton.Size = new Size(75, 25);
+        _deletePresetButton.Text = "Delete";
+        _deletePresetButton.TabIndex = 5;
+        _deletePresetButton.UseVisualStyleBackColor = true;
+        _presetsTab.Controls.Add(_deletePresetButton);
+
+        _applyPresetButton.Location = new Point(261, 410);
+        _applyPresetButton.Size = new Size(75, 25);
+        _applyPresetButton.Text = "Apply";
+        _applyPresetButton.TabIndex = 6;
+        _applyPresetButton.UseVisualStyleBackColor = true;
+        _presetsTab.Controls.Add(_applyPresetButton);
+
+        // Add tabs to control
+        _tabControl.TabPages.Add(_generalTab);
+        _tabControl.TabPages.Add(_presetsTab);
+
+        // Form buttons
         _resetDefaultsButton.Location = new Point(16, 522);
         _resetDefaultsButton.Name = "_resetDefaultsButton";
-        _resetDefaultsButton.Size = new Size(100, 32);
+        _resetDefaultsButton.Size = new Size(120, 32);
         _resetDefaultsButton.TabIndex = 13;
         _resetDefaultsButton.Text = "Reset to Defaults";
         _resetDefaultsButton.UseVisualStyleBackColor = true;
+
         _saveButton.Location = new Point(198, 522);
         _saveButton.Name = "_saveButton";
         _saveButton.Size = new Size(80, 32);
         _saveButton.TabIndex = 14;
         _saveButton.Text = "Save";
         _saveButton.UseVisualStyleBackColor = true;
+
         _cancelButton.Location = new Point(280, 522);
         _cancelButton.Name = "_cancelButton";
         _cancelButton.Size = new Size(80, 32);
         _cancelButton.TabIndex = 15;
         _cancelButton.Text = "Cancel";
         _cancelButton.UseVisualStyleBackColor = true;
+
+        // Form
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(382, 566);
-        Controls.Add(_cancelButton);
-        Controls.Add(_saveButton);
+        ClientSize = new Size(384, 566);
+        Controls.Add(_tabControl);
         Controls.Add(_resetDefaultsButton);
-        Controls.Add(_systemPromptTextBox);
-        Controls.Add(_personalityOverrideTextBox);
-        Controls.Add(_modelTextBox);
-        Controls.Add(_apiKeyTextBox);
-        Controls.Add(_endpointTextBox);
-        Controls.Add(_hostTextBox);
-        Controls.Add(_hotkeyIntervalNumeric);
-        Controls.Add(_webSearchCheckBox);
-        Controls.Add(_hotkeyCheckBox);
-        Controls.Add(_historyCheckBox);
-        Controls.Add(_autoCopyCheckBox);
-        Controls.Add(_enablePersonalityCheckBox);
-        Controls.Add(_expandedTextboxCheckBox);
-        Controls.Add(_englishCheckBox);
+        Controls.Add(_saveButton);
+        Controls.Add(_cancelButton);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         Name = "SettingsForm";
+        ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterParent;
         Text = "Settings";
-        ((ISupportInitialize)_hotkeyIntervalNumeric).EndInit();
         ResumeLayout(false);
-        PerformLayout();
     }
 }

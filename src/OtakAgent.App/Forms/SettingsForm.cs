@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -11,6 +13,8 @@ public partial class SettingsForm : Form
 {
     private readonly SettingsService _settingsService;
     private readonly AgentTalkSettings _workingCopy;
+    private readonly List<SystemPromptPreset> _presets = new();
+    private SystemPromptPreset? _selectedPreset;
 
     public SettingsForm(SettingsService settingsService, AgentTalkSettings currentSettings)
     {
@@ -24,14 +28,137 @@ public partial class SettingsForm : Form
         _resetDefaultsButton.Click += (_, _) => ResetToDefaults();
         _enablePersonalityCheckBox.CheckedChanged += (_, _) => UpdatePersonalityEditors();
         _englishCheckBox.CheckedChanged += (_, _) => ApplyLocalization();
+
+        // Preset management event handlers
+        _addPresetButton.Click += AddPresetButton_Click;
+        _updatePresetButton.Click += UpdatePresetButton_Click;
+        _deletePresetButton.Click += DeletePresetButton_Click;
+        _applyPresetButton.Click += ApplyPresetButton_Click;
+        _presetsListBox.SelectedIndexChanged += PresetsListBox_SelectedIndexChanged;
     }
 
     public AgentTalkSettings UpdatedSettings { get; private set; } = AgentTalkSettings.CreateDefault();
 
     private void SettingsForm_Load(object? sender, EventArgs e)
     {
+        LoadPresets();
         BindSettingsToControls();
         ApplyLocalization();
+    }
+
+    private void LoadPresets()
+    {
+        _presets.Clear();
+
+        // Load built-in presets
+        _presets.AddRange(SystemPromptPreset.GetBuiltInPresets());
+
+        // Load user presets
+        if (_workingCopy.SystemPromptPresets != null && _workingCopy.SystemPromptPresets.Count > 0)
+        {
+            _presets.AddRange(_workingCopy.SystemPromptPresets.Where(p => !p.IsBuiltIn));
+        }
+
+        RefreshPresetsListBox();
+    }
+
+    private void RefreshPresetsListBox()
+    {
+        _presetsListBox.Items.Clear();
+        foreach (var preset in _presets)
+        {
+            var displayName = preset.IsBuiltIn ? $"[Built-in] {preset.Name}" : preset.Name;
+            _presetsListBox.Items.Add(displayName);
+        }
+    }
+
+    private void PresetsListBox_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (_presetsListBox.SelectedIndex >= 0 && _presetsListBox.SelectedIndex < _presets.Count)
+        {
+            _selectedPreset = _presets[_presetsListBox.SelectedIndex];
+            _presetNameTextBox.Text = _selectedPreset.Name;
+            _presetPromptTextBox.Text = _selectedPreset.Prompt;
+
+            // Disable editing for built-in presets
+            _presetNameTextBox.Enabled = !_selectedPreset.IsBuiltIn;
+            _presetPromptTextBox.Enabled = !_selectedPreset.IsBuiltIn;
+            _updatePresetButton.Enabled = !_selectedPreset.IsBuiltIn;
+            _deletePresetButton.Enabled = !_selectedPreset.IsBuiltIn;
+        }
+    }
+
+    private void AddPresetButton_Click(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_presetNameTextBox.Text))
+        {
+            MessageBox.Show(this, "Please enter a preset name.", "otak-agent", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        var newPreset = new SystemPromptPreset
+        {
+            Name = _presetNameTextBox.Text.Trim(),
+            Prompt = _presetPromptTextBox.Text.Trim(),
+            IsBuiltIn = false
+        };
+
+        _presets.Add(newPreset);
+        RefreshPresetsListBox();
+        _presetsListBox.SelectedIndex = _presets.Count - 1;
+    }
+
+    private void UpdatePresetButton_Click(object? sender, EventArgs e)
+    {
+        if (_selectedPreset == null || _selectedPreset.IsBuiltIn)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_presetNameTextBox.Text))
+        {
+            MessageBox.Show(this, "Please enter a preset name.", "otak-agent", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        _selectedPreset.Name = _presetNameTextBox.Text.Trim();
+        _selectedPreset.Prompt = _presetPromptTextBox.Text.Trim();
+        _selectedPreset.UpdatedAt = DateTime.UtcNow;
+
+        var selectedIndex = _presetsListBox.SelectedIndex;
+        RefreshPresetsListBox();
+        _presetsListBox.SelectedIndex = selectedIndex;
+    }
+
+    private void DeletePresetButton_Click(object? sender, EventArgs e)
+    {
+        if (_selectedPreset == null || _selectedPreset.IsBuiltIn)
+            return;
+
+        var result = MessageBox.Show(this,
+            $"Are you sure you want to delete the preset '{_selectedPreset.Name}'?",
+            "otak-agent",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+
+        if (result == DialogResult.Yes)
+        {
+            _presets.Remove(_selectedPreset);
+            RefreshPresetsListBox();
+            _selectedPreset = null;
+            _presetNameTextBox.Clear();
+            _presetPromptTextBox.Clear();
+        }
+    }
+
+    private void ApplyPresetButton_Click(object? sender, EventArgs e)
+    {
+        if (_selectedPreset == null)
+            return;
+
+        _systemPromptTextBox.Text = _selectedPreset.Prompt;
+        _workingCopy.SelectedPresetId = _selectedPreset.Id;
+
+        // Switch to General tab to show the applied prompt
+        _tabControl.SelectedTab = _generalTab;
     }
 
     private void BindSettingsToControls()
@@ -58,6 +185,8 @@ public partial class SettingsForm : Form
         if (_englishCheckBox.Checked)
         {
             Text = "Settings";
+            _generalTab.Text = "General";
+            _presetsTab.Text = "Prompt Presets";
             _englishCheckBox.Text = "Use English UI";
             _expandedTextboxCheckBox.Text = "Expanded input text area";
             _enablePersonalityCheckBox.Text = "Enable Clippy/Kairu persona";
@@ -71,6 +200,10 @@ public partial class SettingsForm : Form
             _modelTextBox.PlaceholderText = "Model (e.g. gpt-4o-mini)";
             _personalityOverrideTextBox.PlaceholderText = "Persona override (optional)";
             _systemPromptTextBox.PlaceholderText = "Additional system prompt";
+            _addPresetButton.Text = "Add";
+            _updatePresetButton.Text = "Update";
+            _deletePresetButton.Text = "Delete";
+            _applyPresetButton.Text = "Apply";
             _saveButton.Text = "Save";
             _cancelButton.Text = "Cancel";
             _resetDefaultsButton.Text = "Reset to Defaults";
@@ -78,6 +211,8 @@ public partial class SettingsForm : Form
         else
         {
             Text = "設定";
+            _generalTab.Text = "一般";
+            _presetsTab.Text = "プロンプトプリセット";
             _englishCheckBox.Text = "英語 UI を使用";
             _expandedTextboxCheckBox.Text = "入力欄を拡大";
             _enablePersonalityCheckBox.Text = "キャラクター人格を有効化";
@@ -91,6 +226,10 @@ public partial class SettingsForm : Form
             _modelTextBox.PlaceholderText = "モデル名";
             _personalityOverrideTextBox.PlaceholderText = "人格プロンプト (任意)";
             _systemPromptTextBox.PlaceholderText = "追加のシステムプロンプト";
+            _addPresetButton.Text = "追加";
+            _updatePresetButton.Text = "更新";
+            _deletePresetButton.Text = "削除";
+            _applyPresetButton.Text = "適用";
             _saveButton.Text = "保存";
             _cancelButton.Text = "キャンセル";
             _resetDefaultsButton.Text = "デフォルトに戻す";
@@ -99,110 +238,100 @@ public partial class SettingsForm : Form
 
     private async Task SaveAsync()
     {
-        // Sanitize inputs before saving
-        UpdatedSettings = new AgentTalkSettings
-        {
-            English = _englishCheckBox.Checked,
-            ExpandedTextbox = _expandedTextboxCheckBox.Checked,
-            EnablePersonality = _enablePersonalityCheckBox.Checked,
-            AutoCopyToClipboard = _autoCopyCheckBox.Checked,
-            UseConversationHistory = _historyCheckBox.Checked,
-            ClipboardHotkeyEnabled = _hotkeyCheckBox.Checked,
-            EnableWebSearch = _webSearchCheckBox.Checked,
-            ClipboardHotkeyIntervalMs = (int)_hotkeyIntervalNumeric.Value,
-            Host = _hostTextBox.Text.Trim(),
-            Endpoint = _endpointTextBox.Text.Trim(),
-            ApiKey = _apiKeyTextBox.Text.Trim(),
-            Model = _modelTextBox.Text.Trim(),
-            PersonalityOverride = SecureStringHelper.SanitizeInput(_personalityOverrideTextBox.Text),
-            SystemPrompt = SecureStringHelper.SanitizeInput(_systemPromptTextBox.Text),
-            LastUserMessage = _workingCopy.LastUserMessage
-        };
+        _workingCopy.English = _englishCheckBox.Checked;
+        _workingCopy.ExpandedTextbox = _expandedTextboxCheckBox.Checked;
+        _workingCopy.EnablePersonality = _enablePersonalityCheckBox.Checked;
+        _workingCopy.AutoCopyToClipboard = _autoCopyCheckBox.Checked;
+        _workingCopy.UseConversationHistory = _historyCheckBox.Checked;
+        _workingCopy.ClipboardHotkeyEnabled = _hotkeyCheckBox.Checked;
+        _workingCopy.EnableWebSearch = _webSearchCheckBox.Checked;
+        _workingCopy.ClipboardHotkeyIntervalMs = (int)_hotkeyIntervalNumeric.Value;
+        _workingCopy.Host = _hostTextBox.Text.Trim();
+        _workingCopy.Endpoint = _endpointTextBox.Text.Trim();
+        _workingCopy.ApiKey = _apiKeyTextBox.Text.Trim();
+        _workingCopy.Model = _modelTextBox.Text.Trim();
+        _workingCopy.PersonalityOverride = _personalityOverrideTextBox.Text.Trim();
+        _workingCopy.SystemPrompt = _systemPromptTextBox.Text.Trim();
 
-        // Validate settings before saving
-        var validation = SettingsValidator.ValidateSettings(UpdatedSettings);
-        if (!validation.IsValid)
-        {
-            var message = validation.GetErrorMessage();
-            var title = _englishCheckBox.Checked ? "Validation Error" : "検証エラー";
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        // Save user presets
+        _workingCopy.SystemPromptPresets = _presets.Where(p => !p.IsBuiltIn).ToList();
 
-            // Only prevent saving if there are critical errors
-            if (validation.Errors.Any(e => e.Contains("required")))
-            {
-                return;
-            }
+        var validationResult = SettingsValidator.ValidateSettings(_workingCopy);
+        var errors = validationResult.Errors;
+        if (!validationResult.IsValid)
+        {
+            var message = "Please fix the following errors:\n\n" + string.Join("\n", errors.Select(e => $"• {e}"));
+            MessageBox.Show(this, message, "otak-agent", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
         }
 
         try
         {
-            await _settingsService.SaveAsync(UpdatedSettings).ConfigureAwait(false);
+            await _settingsService.SaveAsync(_workingCopy).ConfigureAwait(false);
+            UpdatedSettings = _workingCopy;
             DialogResult = DialogResult.OK;
-            Close();
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(() => Close());
+            }
+            else
+            {
+                Close();
+            }
         }
         catch (Exception ex)
         {
-            var title = _englishCheckBox.Checked ? "Save Error" : "保存エラー";
-            MessageBox.Show(this, ex.Message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, $"Failed to save settings: {ex.Message}", "otak-agent", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
     private void UpdatePersonalityEditors()
     {
-        _personalityOverrideTextBox.Enabled = _enablePersonalityCheckBox.Checked;
+        bool enablePersonality = _enablePersonalityCheckBox.Checked;
+        // The personality override textbox is now hidden in the tab layout
+        // Users can still edit system prompt directly
     }
 
     private void ResetToDefaults()
     {
-        var defaults = AgentTalkSettings.CreateDefault();
+        var result = MessageBox.Show(this, "Are you sure you want to reset all settings to their default values?",
+            "otak-agent", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
-        // Keep API key from current settings
-        var currentApiKey = _apiKeyTextBox.Text;
-
-        // Update all controls with default values
-        _englishCheckBox.Checked = defaults.English;
-        _expandedTextboxCheckBox.Checked = defaults.ExpandedTextbox;
-        _enablePersonalityCheckBox.Checked = defaults.EnablePersonality;
-        _autoCopyCheckBox.Checked = defaults.AutoCopyToClipboard;
-        _historyCheckBox.Checked = defaults.UseConversationHistory;
-        _hotkeyCheckBox.Checked = defaults.ClipboardHotkeyEnabled;
-        _webSearchCheckBox.Checked = defaults.EnableWebSearch;
-        _hotkeyIntervalNumeric.Value = defaults.ClipboardHotkeyIntervalMs;
-        _hostTextBox.Text = defaults.Host;
-        _endpointTextBox.Text = defaults.Endpoint;
-        _apiKeyTextBox.Text = currentApiKey; // Keep the API key
-        _modelTextBox.Text = defaults.Model;
-        _personalityOverrideTextBox.Text = defaults.PersonalityOverride;
-        _systemPromptTextBox.Text = defaults.SystemPrompt;
-
-        UpdatePersonalityEditors();
-
-        // Show confirmation message
-        var message = _englishCheckBox.Checked
-            ? "Settings have been reset to defaults (API key preserved)."
-            : "設定をデフォルトに戻しました（APIキーは保持）。";
-        var title = _englishCheckBox.Checked ? "Reset Complete" : "リセット完了";
-        MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (result == DialogResult.Yes)
+        {
+            var defaults = AgentTalkSettings.CreateDefault();
+            CopySettings(defaults, _workingCopy);
+            LoadPresets();
+            BindSettingsToControls();
+        }
     }
 
     private static AgentTalkSettings CloneSettings(AgentTalkSettings source)
     {
-        return new AgentTalkSettings
-        {
-            English = source.English,
-            ExpandedTextbox = source.ExpandedTextbox,
-            EnablePersonality = source.EnablePersonality,
-            AutoCopyToClipboard = source.AutoCopyToClipboard,
-            ClipboardHotkeyEnabled = source.ClipboardHotkeyEnabled,
-            ClipboardHotkeyIntervalMs = source.ClipboardHotkeyIntervalMs,
-            UseConversationHistory = source.UseConversationHistory,
-            Host = source.Host,
-            Endpoint = source.Endpoint,
-            ApiKey = source.ApiKey,
-            Model = source.Model,
-            SystemPrompt = source.SystemPrompt,
-            PersonalityOverride = source.PersonalityOverride,
-            LastUserMessage = source.LastUserMessage
-        };
+        var clone = AgentTalkSettings.CreateDefault();
+        CopySettings(source, clone);
+        return clone;
+    }
+
+    private static void CopySettings(AgentTalkSettings source, AgentTalkSettings target)
+    {
+        target.English = source.English;
+        target.ExpandedTextbox = source.ExpandedTextbox;
+        target.EnablePersonality = source.EnablePersonality;
+        target.AutoCopyToClipboard = source.AutoCopyToClipboard;
+        target.UseConversationHistory = source.UseConversationHistory;
+        target.ClipboardHotkeyEnabled = source.ClipboardHotkeyEnabled;
+        target.EnableWebSearch = source.EnableWebSearch;
+        target.ClipboardHotkeyIntervalMs = source.ClipboardHotkeyIntervalMs;
+        target.Host = source.Host;
+        target.Endpoint = source.Endpoint;
+        target.ApiKey = source.ApiKey;
+        target.Model = source.Model;
+        target.PersonalityOverride = source.PersonalityOverride;
+        target.SystemPrompt = source.SystemPrompt;
+        target.LastUserMessage = source.LastUserMessage;
+        target.SystemPromptPresets = source.SystemPromptPresets?.ToList() ?? new List<SystemPromptPreset>();
+        target.SelectedPresetId = source.SelectedPresetId;
     }
 }
