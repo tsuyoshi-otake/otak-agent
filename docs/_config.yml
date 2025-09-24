@@ -1,0 +1,9 @@
+theme: jekyll-theme-cayman
+title: OtakAgent
+description: AI-powered Desktop Assistant for Windows
+show_downloads: true
+google_analytics:
+github:
+  repository_url: https://github.com/tsuyoshi-otake/otak-agent
+  zip_url: https://github.com/tsuyoshi-otake/otak-agent/releases
+  tar_url: https://github.com/tsuyoshi-otake/otak-agent/releases
