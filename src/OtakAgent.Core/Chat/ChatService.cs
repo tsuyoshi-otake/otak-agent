@@ -104,6 +104,13 @@ public sealed class ChatService
         var apiResponse = JsonSerializer.Deserialize<ResponsesApiResponse>(responseText, _jsonOptions)
                         ?? throw new InvalidOperationException("Failed to deserialize responses API response.");
 
+        // Check if the response is incomplete due to max_output_tokens
+        if (apiResponse.Status == "incomplete" && apiResponse.IncompleteDetails?.Reason == "max_output_tokens")
+        {
+            // For incomplete responses due to token limit, return an appropriate message
+            return "申し訳ございません。回答が長すぎたため、途中で切れてしまいました。もう少し具体的な質問をしていただければ、より簡潔にお答えできます。";
+        }
+
         // Extract text from the response - try different possible structures
         if (apiResponse.Output != null && apiResponse.Output.Count > 0)
         {
@@ -130,6 +137,14 @@ public sealed class ChatService
                         return textContent.Text;
                     }
                 }
+            }
+
+            // Check if this is a reasoning-only response (happens with web search)
+            var hasReasoningOnly = apiResponse.Output.Any(o => o.Type == "reasoning");
+            if (hasReasoningOnly)
+            {
+                // Return a message indicating the model is still processing
+                return "申し訳ございません。検索結果を処理中にエラーが発生しました。もう一度お試しください。";
             }
 
             // Debug: Log the actual response structure and JSON
@@ -305,7 +320,7 @@ public sealed record ChatRequest(
     string UserMessage,
     IReadOnlyList<ChatMessage>? History = null,
     string? SystemPrompt = null,
-    int MaxTokens = 1024,
+    int MaxTokens = 8192,
     double Temperature = 1.0,
     double TopP = 1.0,
     double FrequencyPenalty = 0.0,

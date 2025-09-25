@@ -186,7 +186,8 @@ partial class SettingsForm
         _modelComboBox.Items.AddRange(new object[] {
             "gpt-5-codex",
             "gpt-5",
-            "gpt-4.1"
+            "gpt-4.1",
+            "gpt-4.1-mini"
         });
         _generalTab.Controls.Add(_modelComboBox);
 

@@ -41,6 +41,9 @@ public sealed class ResponsesApiResponse
     [JsonPropertyName("error")]
     public object? Error { get; set; }
 
+    [JsonPropertyName("incomplete_details")]
+    public IncompleteDetails? IncompleteDetails { get; set; }
+
     [JsonPropertyName("model")]
     public string Model { get; set; } = string.Empty;
 
@@ -91,4 +94,10 @@ public sealed class ResponseUsage
 
     [JsonPropertyName("total_tokens")]
     public int TotalTokens { get; set; }
+}
+
+public sealed class IncompleteDetails
+{
+    [JsonPropertyName("reason")]
+    public string Reason { get; set; } = string.Empty;
 }

@@ -386,6 +386,7 @@ public partial class MainForm : Form
     {
         if (_isProcessing)
         {
+            SystemSounds.Beep.Play();
             return;
         }
 
@@ -587,6 +588,7 @@ public partial class MainForm : Form
     {
         if (_isProcessing)
         {
+            SystemSounds.Beep.Play();
             return;
         }
 
@@ -745,13 +747,34 @@ public partial class MainForm : Form
         {
             e.Handled = true;
             e.SuppressKeyPress = true;
-            _ = HandleSendButtonClickAsync();
+
+            // Check if we're in response mode (Input button is shown)
+            if (_sendButton.Text == InputButtonText())
+            {
+                // Act as Input button - enter new input mode
+                EnterInputMode(clearText: true);
+            }
+            else
+            {
+                // Clear placeholder if needed before sending
+                ClearPlaceholderIfNeeded();
+
+                // Focus the input box to ensure it's ready
+                _inputTextBox.Focus();
+
+                _ = HandleSendButtonClickAsync();
+            }
         }
         else if (e.Control && e.KeyCode == Keys.Back)
         {
             e.Handled = true;
             e.SuppressKeyPress = true;
             _ = HandleSecondaryButtonClickAsync();
+        }
+        else if (!e.Control && !e.Alt && !e.Shift)
+        {
+            // Clear placeholder on any regular key press
+            ClearPlaceholderIfNeeded();
         }
     }
 
