@@ -82,7 +82,7 @@ otak-agent/
 ├── src/                    # ソースコード
 │   ├── OtakAgent.Core/     # ビジネスロジック層
 │   │   ├── Configuration/  # 設定管理
-│   │   └── Services/       # チャット、クリップボード、システムリソース監視
+│   │   └── Services/       # チャットサービス
 │   └── OtakAgent.App/      # プレゼンテーション層
 │       ├── Forms/          # WinForms UI
 │       └── Resources/      # アセット（GIF、PNG、WAVファイル）
@@ -130,7 +130,6 @@ otak-agent/
 - `ChatService`: OpenAI互換エンドポイントとのAPI通信を処理
 - `SettingsService`: JSON設定の永続化を管理
 - `PersonalityPromptBuilder`: ペルソナ固有のシステムプロンプトを構築
-- `SystemResourceService`: システムリソース（CPU/メモリ）使用率を監視
 - `UpdateChecker`: GitHubリリースから更新をチェック
 
 ### 設定フロー

@@ -5,7 +5,6 @@ using OtakAgent.Core.Chat;
 using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Http;
 using OtakAgent.Core.Personality;
-using OtakAgent.Core.Services;
 using OtakAgent.Core.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -48,7 +47,6 @@ internal static class ServiceConfigurator
         .ConfigurePrimaryHttpMessageHandler(() => CreateHttpMessageHandler());
 
         services.AddSingleton<PersonalityPromptBuilder>();
-        services.AddSingleton<ISystemResourceService, SystemResourceService>();
 
         services.AddSingleton<Forms.MainForm>();
 

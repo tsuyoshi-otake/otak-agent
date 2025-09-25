@@ -13,7 +13,6 @@ using System.Windows.Forms;
 using OtakAgent.Core.Chat;
 using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Personality;
-using OtakAgent.Core.Services;
 using OtakAgent.Core.Updates;
 
 namespace OtakAgent.App.Forms;
@@ -24,12 +23,10 @@ public partial class MainForm : Form
     private readonly SettingsService _settingsService;
     private readonly ChatService _chatService;
     private readonly PersonalityPromptBuilder _personalityPromptBuilder;
-    private readonly ISystemResourceService _systemResourceService;
     private readonly UpdateChecker _updateChecker;
     private readonly List<ChatMessage> _history = new();
     private const int MaxHistoryItems = 100; // Prevent unbounded growth
     private readonly System.Windows.Forms.Timer _animationTimer;
-    private readonly System.Windows.Forms.Timer _resourceUpdateTimer;
 
     private static readonly Color BubbleFillColor = Color.FromArgb(255, 255, 206);
     private static readonly Color MagentaColorKey = Color.Magenta;
@@ -49,12 +46,11 @@ public partial class MainForm : Form
 
     private bool _isPlaceholderActive;
 
-    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService, UpdateChecker updateChecker)
+    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, UpdateChecker updateChecker)
     {
         _settingsService = settingsService;
         _chatService = chatService;
         _personalityPromptBuilder = personalityPromptBuilder;
-        _systemResourceService = systemResourceService;
         _updateChecker = updateChecker;
 
         InitializeComponent();
@@ -86,11 +82,6 @@ public partial class MainForm : Form
 
         _animationTimer = new System.Windows.Forms.Timer { Interval = 1400 };
         _animationTimer.Tick += OnAnimationTimerTick;
-
-        _resourceUpdateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
-        _resourceUpdateTimer.Tick += OnResourceUpdateTimerTick;
-
-        _systemResourceService.ResourcesUpdated += OnSystemResourcesUpdated;
 
         Controls.SetChildIndex(_characterPicture, 0);
     }
@@ -129,9 +120,6 @@ public partial class MainForm : Form
                 UpdateTooltips();
             }
 
-            // Start resource monitoring
-            _systemResourceService.StartMonitoring();
-            _resourceUpdateTimer.Start();
 
 
             // Set initial tooltip with resource info
@@ -856,43 +844,12 @@ public partial class MainForm : Form
         }
     }
 
-    private void OnResourceUpdateTimerTick(object? sender, EventArgs e)
-    {
-        // Timer tick is already on UI thread, no need for Invoke
-        UpdateSystemTrayTooltip();
-    }
-
-
-    private void OnSystemResourcesUpdated(object? sender, ResourceUpdateEventArgs e)
-    {
-        // This event is raised from the resource service background thread
-        // The timer tick will handle the tooltip update to avoid duplicate updates
-        // Do nothing here to prevent update flooding and thread issues
-    }
 
     private void UpdateSystemTrayTooltip()
     {
         if (!IsDisposed && !Disposing && _notifyIcon != null)
         {
-            var cpuUsage = _systemResourceService.CpuUsage;
-            var memUsage = _systemResourceService.MemoryUsagePercentage;
-            var memUsedMB = _systemResourceService.MemoryUsedMB;
-            var memTotalMB = _systemResourceService.MemoryTotalMB;
-
-
-            var tooltipText = _settings.English
-                ? $"otak-agent\nCPU: {cpuUsage:F1}%\nMemory: {memUsedMB:N0} MB / {memTotalMB:N0} MB ({memUsage:F1}%)"
-                : $"otak-agent\nCPU使用率: {cpuUsage:F1}%\nメモリ: {memUsedMB:N0} MB / {memTotalMB:N0} MB ({memUsage:F1}%)";
-
-            // NotifyIcon text is limited to 64 characters
-            if (tooltipText.Length > 63)
-            {
-                tooltipText = _settings.English
-                    ? $"CPU: {cpuUsage:F1}% | Mem: {memUsage:F1}%"
-                    : $"CPU: {cpuUsage:F1}% | メモリ: {memUsage:F1}%";
-            }
-
-            _notifyIcon.Text = tooltipText;
+            _notifyIcon.Text = "otak-agent";
         }
     }
 
@@ -1120,13 +1077,6 @@ public partial class MainForm : Form
         _notifyIcon.Visible = false;
         _animationTimer.Stop();
         _animationTimer.Dispose();
-        _resourceUpdateTimer.Stop();
-        _resourceUpdateTimer.Dispose();
-        _systemResourceService.StopMonitoring();
-        if (_systemResourceService is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
         _characterPicture.Image = null;
         DisposeCharacterFrames();
         DisposeBubbleImages();
