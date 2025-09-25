@@ -129,8 +129,9 @@ otak-agent/
 アプリケーションはコンストラクタ依存性注入で以下のコアサービスを使用：
 - `ChatService`: OpenAI互換エンドポイントとのAPI通信を処理
 - `SettingsService`: JSON設定の永続化を管理
-- `ClipboardHotkeyService`: ダブルCtrl+Cジェスチャーを監視
 - `PersonalityPromptBuilder`: ペルソナ固有のシステムプロンプトを構築
+- `SystemResourceService`: システムリソース（CPU/メモリ）使用率を監視
+- `UpdateChecker`: GitHubリリースから更新をチェック
 
 ### 設定フロー
 1. 実行ファイルの隣に`agenttalk.settings.json`として設定を保存
