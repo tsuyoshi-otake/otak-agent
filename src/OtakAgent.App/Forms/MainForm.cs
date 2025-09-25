@@ -57,6 +57,10 @@ public partial class MainForm : Form
         InitializeComponent();
         ApplyBubbleLayout();
 
+        // Enable form-level key preview to handle shortcuts even when TextBox is readonly
+        KeyPreview = true;
+        KeyDown += MainForm_KeyDown;
+
         Load += MainForm_Load;
         FormClosing += MainForm_FormClosing;
         _sendButton.Click += async (_, _) => await HandleSendButtonClickAsync().ConfigureAwait(false);
@@ -741,6 +745,34 @@ public partial class MainForm : Form
             _isPlaceholderActive = IsPlaceholderText(_inputTextBox.Text);
         }
     }
+    private void MainForm_KeyDown(object? sender, KeyEventArgs e)
+    {
+        // Handle form-level keyboard shortcuts when TextBox is readonly
+        if (_inputTextBox.ReadOnly)
+        {
+            if (e.Control && e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+
+                // Check if we're in response mode (Input button is shown)
+                var inputText = _settings.English ? "Input" : "入力";
+                if (_sendButton.Text == inputText)
+                {
+                    // Act as Input button - enter new input mode
+                    EnterInputMode(clearText: true);
+                    return;
+                }
+            }
+            else if (e.Control && e.KeyCode == Keys.Back)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                _ = HandleSecondaryButtonClickAsync();
+            }
+        }
+    }
+
     private void InputTextBox_KeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Control && e.KeyCode == Keys.Enter)
@@ -749,10 +781,13 @@ public partial class MainForm : Form
             e.SuppressKeyPress = true;
 
             // Check if we're in response mode (Input button is shown)
-            if (_sendButton.Text == InputButtonText())
+            // Compare with actual button text, not the method result
+            var inputText = _settings.English ? "Input" : "入力";
+            if (_sendButton.Text == inputText)
             {
                 // Act as Input button - enter new input mode
                 EnterInputMode(clearText: true);
+                return;
             }
             else
             {
