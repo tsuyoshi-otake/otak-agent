@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Package Name="OtakAgent"
+             Language="1041"
+             Codepage="932"
+             Version="1.0.0.0"
+             Manufacturer="Tsuyoshi Otake"
+             UpgradeCode="B7E5D3F2-8A4C-4E9B-9D1A-F5C8E3A2B1D0"
+             InstallerVersion="500"
+             Compressed="yes"
+             Scope="perMachine">
+
+        <MajorUpgrade DowngradeErrorMessage="新しいバージョンの [ProductName] が既にインストールされています。" />
+
+        <Media Id="1" Cabinet="OtakAgent.cab" EmbedCab="yes" />
+
+        <!-- アイコン -->
+        <Icon Id="OtakAgent.ico" SourceFile="..\src\OtakAgent.App\Resources\app.ico" />
+        <Property Id="ARPPRODUCTICON" Value="OtakAgent.ico" />
+        <Property Id="ARPURLINFOABOUT" Value="https://github.com/tsuyoshi-otake/otak-agent" />
+        <Property Id="ARPCOMMENTS" Value="AI搭載デスクトップアシスタント" />
+
+        <!-- ディレクトリ構造 -->
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLFOLDER" Name="OtakAgent">
+                <Component Id="OtakAgent.App.exe" Guid="A1B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                    <File Id="OtakAgent.App.exe"
+                          Source="..\publish\portable\OtakAgent.App.exe"
+                          KeyPath="yes" />
+                </Component>
+
+                <!-- Resources folder -->
+                <Directory Id="ResourcesFolder" Name="Resources">
+                    <Component Id="clippy.gif" Guid="B1B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="clippy.gif"
+                              Source="..\publish\portable\Resources\clippy.gif"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="clippy_start.gif" Guid="C1B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="clippy_start.gif"
+                              Source="..\publish\portable\Resources\clippy_start.gif"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="kairu.gif" Guid="D1B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="kairu.gif"
+                              Source="..\publish\portable\Resources\kairu.gif"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="kairu_start.gif" Guid="E1B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="kairu_start.gif"
+                              Source="..\publish\portable\Resources\kairu_start.gif"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="windowTop.png" Guid="F1B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="windowTop.png"
+                              Source="..\publish\portable\Resources\windowTop.png"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="windowCenter.png" Guid="01B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="windowCenter.png"
+                              Source="..\publish\portable\Resources\windowCenter.png"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="windowBottom.png" Guid="11B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="windowBottom.png"
+                              Source="..\publish\portable\Resources\windowBottom.png"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="clippy.wav" Guid="21B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="clippy.wav"
+                              Source="..\publish\portable\Resources\clippy.wav"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="kairu.wav" Guid="31B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="kairu.wav"
+                              Source="..\publish\portable\Resources\kairu.wav"
+                              KeyPath="yes" />
+                    </Component>
+                    <Component Id="menucommand.wav" Guid="41B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                        <File Id="menucommand.wav"
+                              Source="..\publish\portable\Resources\menucommand.wav"
+                              KeyPath="yes" />
+                    </Component>
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+        <!-- プログラムメニュー -->
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="ApplicationProgramsFolder" Name="OtakAgent">
+                <Component Id="ApplicationShortcut" Guid="51B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                    <Shortcut Id="ApplicationStartMenuShortcut"
+                              Name="OtakAgent"
+                              Description="AI搭載デスクトップアシスタント"
+                              Target="[INSTALLFOLDER]OtakAgent.App.exe"
+                              WorkingDirectory="INSTALLFOLDER"
+                              Icon="OtakAgent.ico"
+                              IconIndex="0" />
+                    <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+                    <RegistryValue Root="HKCU"
+                                   Key="Software\OtakAgent"
+                                   Name="installed"
+                                   Type="integer"
+                                   Value="1"
+                                   KeyPath="yes" />
+                </Component>
+            </Directory>
+        </StandardDirectory>
+
+        <!-- デスクトップ -->
+        <StandardDirectory Id="DesktopFolder">
+            <Component Id="DesktopShortcut" Guid="61B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                <Shortcut Id="ApplicationDesktopShortcut"
+                          Name="OtakAgent"
+                          Description="AI搭載デスクトップアシスタント"
+                          Target="[INSTALLFOLDER]OtakAgent.App.exe"
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="OtakAgent.ico"
+                          IconIndex="0" />
+                <RemoveFile Id="RemoveDesktopShortcut"
+                            Name="OtakAgent.lnk"
+                            On="uninstall" />
+                <RegistryValue Root="HKCU"
+                               Key="Software\OtakAgent"
+                               Name="desktopShortcut"
+                               Type="integer"
+                               Value="1"
+                               KeyPath="yes" />
+            </Component>
+        </StandardDirectory>
+
+        <!-- 機能定義 -->
+        <Feature Id="ProductFeature" Title="OtakAgent" Level="1">
+            <ComponentRef Id="OtakAgent.App.exe" />
+            <ComponentRef Id="clippy.gif" />
+            <ComponentRef Id="clippy_start.gif" />
+            <ComponentRef Id="kairu.gif" />
+            <ComponentRef Id="kairu_start.gif" />
+            <ComponentRef Id="windowTop.png" />
+            <ComponentRef Id="windowCenter.png" />
+            <ComponentRef Id="windowBottom.png" />
+            <ComponentRef Id="clippy.wav" />
+            <ComponentRef Id="kairu.wav" />
+            <ComponentRef Id="menucommand.wav" />
+            <ComponentRef Id="ApplicationShortcut" />
+            <ComponentRef Id="DesktopShortcut" />
+        </Feature>
+    </Package>
+</Wix>
