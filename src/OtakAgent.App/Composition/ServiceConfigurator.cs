@@ -6,6 +6,7 @@ using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Http;
 using OtakAgent.Core.Personality;
 using OtakAgent.Core.Services;
+using OtakAgent.Core.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Extensions.Http;
@@ -38,6 +39,13 @@ internal static class ServiceConfigurator
         .AddPolicyHandler(GetRetryPolicy())
         .AddPolicyHandler(GetCircuitBreakerPolicy());
 
+        // Configure HttpClient for UpdateChecker
+        services.AddHttpClient<UpdateChecker>("UpdateAPI", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Add("User-Agent", "OtakAgent-UpdateChecker/1.0");
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => CreateHttpMessageHandler());
 
         services.AddSingleton<PersonalityPromptBuilder>();
         services.AddSingleton<ISystemResourceService, SystemResourceService>();

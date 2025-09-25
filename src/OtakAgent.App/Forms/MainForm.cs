@@ -14,6 +14,7 @@ using OtakAgent.Core.Chat;
 using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Personality;
 using OtakAgent.Core.Services;
+using OtakAgent.Core.Updates;
 
 namespace OtakAgent.App.Forms;
 
@@ -24,6 +25,7 @@ public partial class MainForm : Form
     private readonly ChatService _chatService;
     private readonly PersonalityPromptBuilder _personalityPromptBuilder;
     private readonly ISystemResourceService _systemResourceService;
+    private readonly UpdateChecker _updateChecker;
     private readonly List<ChatMessage> _history = new();
     private const int MaxHistoryItems = 100; // Prevent unbounded growth
     private readonly System.Windows.Forms.Timer _animationTimer;
@@ -47,12 +49,13 @@ public partial class MainForm : Form
 
     private bool _isPlaceholderActive;
 
-    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService)
+    public MainForm(SettingsService settingsService, ChatService chatService, PersonalityPromptBuilder personalityPromptBuilder, ISystemResourceService systemResourceService, UpdateChecker updateChecker)
     {
         _settingsService = settingsService;
         _chatService = chatService;
         _personalityPromptBuilder = personalityPromptBuilder;
         _systemResourceService = systemResourceService;
+        _updateChecker = updateChecker;
 
         InitializeComponent();
         ApplyBubbleLayout();
@@ -985,6 +988,11 @@ public partial class MainForm : Form
         settingsMenuItem.Click += (_, _) => ShowSettingsDialogSync();
         _notifyContextMenu.Items.Add(settingsMenuItem);
 
+        // Add Check for Updates option
+        var updateMenuItem = new ToolStripMenuItem(_settings.English ? "Check for Updates..." : "アップデートの確認...");
+        updateMenuItem.Click += async (_, _) => await CheckForUpdatesAsync();
+        _notifyContextMenu.Items.Add(updateMenuItem);
+
         // Add separator
         _notifyContextMenu.Items.Add(new ToolStripSeparator());
 
@@ -1015,6 +1023,79 @@ public partial class MainForm : Form
         {
             _toolTip.Show(message, _characterPicture, 50, 50, 3000);
         });
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            // Show checking message
+            var checkingMsg = _settings.English
+                ? "Checking for updates..."
+                : "アップデートを確認中...";
+
+            BeginInvoke(() =>
+            {
+                _toolTip.Show(checkingMsg, _characterPicture, 50, 50, 2000);
+            });
+
+            var updateInfo = await _updateChecker.CheckForUpdatesAsync();
+
+            if (updateInfo != null)
+            {
+                // New version available
+                var message = _settings.English
+                    ? $"New version available: v{updateInfo.LatestVersion}\n" +
+                      $"Current version: v{updateInfo.CurrentVersion}\n\n" +
+                      $"Visit the release page to download?"
+                    : $"新しいバージョンがあります: v{updateInfo.LatestVersion}\n" +
+                      $"現在のバージョン: v{updateInfo.CurrentVersion}\n\n" +
+                      $"リリースページを開きますか？";
+
+                var title = _settings.English ? "Update Available" : "アップデート可能";
+
+                BeginInvoke(() =>
+                {
+                    var result = MessageBox.Show(this, message, title,
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        // Open the release page in default browser
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = updateInfo.ReleaseUrl,
+                            UseShellExecute = true
+                        });
+                    }
+                });
+            }
+            else
+            {
+                // Already up to date
+                var message = _settings.English
+                    ? "You are using the latest version."
+                    : "最新バージョンを使用しています。";
+
+                BeginInvoke(() =>
+                {
+                    _toolTip.Show(message, _characterPicture, 50, 50, 3000);
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Update check failed: {ex.Message}");
+
+            var errorMsg = _settings.English
+                ? "Failed to check for updates."
+                : "アップデートの確認に失敗しました。";
+
+            BeginInvoke(() =>
+            {
+                _toolTip.Show(errorMsg, _characterPicture, 50, 50, 3000);
+            });
+        }
     }
 
     private void BubblePanel_MouseDown(object? sender, MouseEventArgs e)
