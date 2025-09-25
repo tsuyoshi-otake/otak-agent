@@ -1,10 +1,20 @@
 # otak-agent
 
-クラシックなAgentTalkフローティングアシスタントを、ネイティブ依存関係のない単一の.NET 10 WinFormsアプリケーションに最新化しました。
+懐かしのMicrosoft Officeアシスタントを再現したパロディソフトウェアです。.NET 10 WinFormsで実装された現代版のデスクトップマスコット/アシスタントです。
+
+## ClippyとKairuへの愛を込めて
+
+クリッピー（Clippy）とカイル（Kairu）は、ただのアニメーションキャラクターではありません。彼らは90年代から2000年代初頭にかけて、無数のユーザーのコンピューター作業を見守り、時にはお節介とも思えるヘルプを提供してきました。
+
+「お手伝いが必要のようですね！」というクリッピーのメッセージは、多くの人にとってミームとなり、インターネット文化の一部となりました。しかし、その本質はユーザーに寄り添い、サポートしようとする優しさにありました。
+
+このプロジェクトは、そんな彼らに現代の技術で新しい命を吹き込み、AIの力でより賢く、より役立つアシスタントとして蔭らせる試みです。
+
+> **注記**: これはMicrosoft Officeアシスタント（Clippy、Kairu）を愛情を込めて再現したパロディソフトウェアです。キャラクターアセットおよびアイコンはMicrosoft Corporation の知的財産を模倣したものであり、エンターテイメント目的でのみ使用されています。
 
 ## 主な特徴
 - .NET 10 RC1の最新機能とパフォーマンス改善を活用する`net10.0-windows`をターゲットとしています
-- AgentTalkの特徴であったClippy/Kairuペルソナとフローティングウィンドウを維持しています
+- 懐かしのClippy/Kairuペルソナとフローティングウィンドウを完全再現
 - 1つの実行ファイル、隣接するJSON設定、オプションの履歴（`%AppData%/AgentTalk`）にデプロイメントを簡素化しました
 - より長い入力のための5倍垂直拡張機能を備えた拡張可能なテキストエリア
 - 統一された右クリックコンテキストメニュー（キャラクターとシステムトレイで同一機能）
@@ -98,7 +108,6 @@ msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:
 
 ## 設定
 - 設定は実行ファイルの隣に`agenttalk.settings.json`として存在し、`OtakAgent.Core`の`SettingsService`によって管理されます
-- 初回起動時、レガシーの`agenttalk.ini`と`SystemPrompt.ini`が検出されると`IniSettingsImporter`が移行します
 - 会話履歴はデフォルトでメモリに残り、オプションで`%AppData%/AgentTalk/history.json`に永続化できます
 - モデル選択はドロップダウンメニューから簡単に変更可能
 - APIキー、ホスト、エンドポイントは設定画面から簡単に設定可能
@@ -114,7 +123,6 @@ msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:
 ## サポートされているAIモデル
 - GPT-5シリーズ: GPT-5、GPT-5 Codex（デフォルト）
 - GPT-4シリーズ: GPT-4.1、GPT-4.1-mini
-- その他のOpenAI互換モデル（従来の/v1/chat/completionsエンドポイント使用）
 - ドロップダウンメニューから簡単にモデルを選択可能
 - GPT-5シリーズとGPT-4.1シリーズは自動的に最新のresponses APIを使用
 
@@ -148,7 +156,6 @@ msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:
 ## API統合の詳細
 - **エンドポイント自動選択**: モデルに基づいて適切なAPIエンドポイントを自動選択
   - GPT-5/GPT-4.1モデル: `/v1/responses`エンドポイントを自動使用
-  - その他のモデル: 設定で指定された`/v1/chat/completions`互換エンドポイント使用
 - **Webサーチ統合**: Responses API使用時に自動的にWebサーチ機能が利用可能
 - **エラーハンドリング**: 不完全な応答やトークン制限の自動処理
 - **最大出力トークン**: 32768トークンまでの長い応答をサポート

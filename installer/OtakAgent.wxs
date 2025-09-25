@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
     <Package Name="OtakAgent"
              Language="1041"
              Codepage="932"
@@ -13,6 +13,16 @@
         <MajorUpgrade DowngradeErrorMessage="新しいバージョンの [ProductName] が既にインストールされています。" />
 
         <Media Id="1" Cabinet="OtakAgent.cab" EmbedCab="yes" />
+
+        <!-- UI Configuration -->
+        <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+        <UIRef Id="WixUI_ErrorProgressText" />
+
+        <!-- License file -->
+        <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+
+        <!-- Dialog customization -->
+        <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="OtakAgentのインストールが完了しました。&#13;&#10;&#13;&#10;スタートメニューまたはデスクトップのショートカットからOtakAgentを起動できます。" />
 
         <!-- アイコン -->
         <Icon Id="OtakAgent.ico" SourceFile="..\src\OtakAgent.App\Resources\app.ico" />

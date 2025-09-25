@@ -111,7 +111,7 @@ otak-agent/
 ## アーキテクチャ概要
 
 ### ソリューション構造
-これはレガシーAgentTalkアシスタントを最新化した.NET 10 WinFormsアプリケーションです。ソリューションは関心の分離によるクリーンアーキテクチャに従っています：
+これはMicrosoft Officeアシスタント（Clippy、Kairu等）を再現したパロディソフトウェアです。懐かしのデスクトップマスコットを現代の技術で蘇らせた.NET 10 WinFormsアプリケーションです。ソリューションは関心の分離によるクリーンアーキテクチャに従っています：
 
 - **OtakAgent.Core** (クラスライブラリ): ビジネスロジック、サービス、モデル
   - 設定管理（設定、INI移行）
@@ -134,7 +134,7 @@ otak-agent/
 
 ### 設定フロー
 1. 実行ファイルの隣に`agenttalk.settings.json`として設定を保存
-2. 初回起動時にレガシー`agenttalk.ini`と`SystemPrompt.ini`を自動インポート
+2. 初回起動時にデフォルト設定を作成
 3. オプションで`%AppData%/AgentTalk/history.json`に履歴を永続化
 
 ### UI動作パターン

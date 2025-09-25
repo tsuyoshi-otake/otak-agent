@@ -5,7 +5,9 @@ title: otak-agent - AI搭載デスクトップアシスタント
 
 # otak-agent
 
-クラシックなAgentTalkフローティングアシスタントを、ネイティブ依存関係のない単一の.NET 10 WinFormsアプリケーションに最新化しました。
+懐かしのMicrosoft Officeアシスタントを再現したパロディソフトウェアです。.NET 10 WinFormsで実装された現代版のデスクトップマスコット/アシスタントです。
+
+> **注記**: これはMicrosoft Officeアシスタント（Clippy、Kairu）を愛情を込めて再現したパロディソフトウェアです。キャラクターアセットおよびアイコンはMicrosoft Corporation の知的財産を模倣したものであり、エンターテイメント目的でのみ使用されています。
 
 ![otak-agent Logo](https://raw.githubusercontent.com/tsuyoshi-otake/otak-agent/main/OtakAgent.Package/Images/StoreLogo.png)
 
