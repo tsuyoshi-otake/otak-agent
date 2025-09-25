@@ -141,11 +141,9 @@
 ## サポートされているAIモデル
 - GPT-5シリーズ: GPT-5、GPT-5 Codex
 - GPT-4シリーズ: GPT-4.1（デフォルト）、GPT-4.1-mini
-- O1シリーズ: o1、o3（/v1/responsesエンドポイント使用）
-- GPT-4oシリーズ: GPT-4o、GPT-4o-mini（/v1/responsesエンドポイント使用）
 - その他のOpenAI互換モデル（従来の/v1/chat/completionsエンドポイント使用）
 - ドロップダウンメニューから簡単にモデルを選択可能
-- 新しいモデル（GPT-5、GPT-4.1、GPT-4o、O1/O3シリーズ）は自動的に最新のresponses APIを使用
+- GPT-5シリーズとGPT-4.1シリーズは自動的に最新のresponses APIを使用
 
 ## ペルソナとホットキー
 - `PersonalityPromptBuilder`は、人格が有効な場合にClippyとKairuのプロンプトを再構築し、カスタムペルソナテキストを許可します
@@ -158,7 +156,7 @@
   - 拡張ボタン（▼/▲）: テキストエリアの5倍拡張
 
 ## API統合の詳細
-- **最新のResponses API**: GPT-5、GPT-4.1、GPT-4o、O1/O3シリーズは自動的に`/v1/responses`エンドポイントを使用
+- **最新のResponses API**: GPT-5シリーズ、GPT-4.1シリーズは自動的に`/v1/responses`エンドポイントを使用
 - **従来のChat Completions API**: その他のモデルは標準の`/v1/chat/completions`エンドポイントを使用
 - **Webサーチ統合**: Responses API使用時に自動的にWebサーチ機能が利用可能
 - **エラーハンドリング**: 不完全な応答やトークン制限の自動処理

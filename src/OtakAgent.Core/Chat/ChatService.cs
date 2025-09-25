@@ -162,10 +162,7 @@ public sealed class ChatService
     {
         var lowerModel = model?.ToLowerInvariant() ?? string.Empty;
         return lowerModel.Contains("gpt-5") ||
-               lowerModel.Contains("gpt-4.1") ||
-               lowerModel.Contains("gpt-4o") ||
-               lowerModel.StartsWith("o1") ||
-               lowerModel.StartsWith("o3");
+               lowerModel.Contains("gpt-4.1");
     }
 
     private static ChatCompletionRequest BuildPayload(ChatRequest request)
