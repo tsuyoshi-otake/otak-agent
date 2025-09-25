@@ -28,7 +28,7 @@ namespace OtakAgent.Core.Validation
         {
             var errors = new List<string>();
 
-            // Validate API Key
+            // Validate API Key (only if provided - empty is OK for initial startup)
             if (!string.IsNullOrWhiteSpace(settings.ApiKey))
             {
                 var apiKey = settings.ApiKey.Trim();
@@ -38,10 +38,7 @@ namespace OtakAgent.Core.Validation
                 }
                 // Don't be too strict about API key format as different providers have different formats
             }
-            else
-            {
-                errors.Add("API key is required for chat functionality.");
-            }
+            // Empty API key is allowed for initial startup - will be validated when actually using chat
 
             // Validate Host
             if (!string.IsNullOrWhiteSpace(settings.Host))
@@ -82,10 +79,7 @@ namespace OtakAgent.Core.Validation
                     errors.Add("Endpoint contains invalid characters.");
                 }
             }
-            else
-            {
-                errors.Add("Endpoint is required.");
-            }
+            // Empty endpoint is OK - will use default
 
             // Validate Model
             if (!string.IsNullOrWhiteSpace(settings.Model))
@@ -99,10 +93,7 @@ namespace OtakAgent.Core.Validation
                     errors.Add($"Unknown model: {model}. This might still work if your API supports it.");
                 }
             }
-            else
-            {
-                errors.Add("Model name is required.");
-            }
+            // Empty model is OK - will use default
 
 
             return new ValidationResult

@@ -181,15 +181,35 @@ StoreアセットはMSIXパッケージング用に`OtakAgent.Package/Images/`�
 - **create-certificate.ps1** - パッケージ署名用の自己署名証明書生成スクリプト
 - **generate-assets.ps1** - ベースイメージからStoreアイコンを生成するスクリプト
 
-MSIXパッケージのビルド方法：
-1. `create-certificate.ps1`を実行して署名証明書を作成
-2. Visual Studio 2022でソリューションを開きOtakAgent.Packageプロジェクトをビルド
-3. またはMSBuildを使用: `msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release`
+#### MSIXパッケージのビルド方法
 
-Microsoft Store提出用：
+##### 方法1: Windows SDK makeappxツール使用（推奨）
+```powershell
+# 1. ポータブル版をビルド
+dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable
+
+# 2. AppxManifestを配置
+Copy-Item OtakAgent.Package\Package.appxmanifest publish\portable\AppxManifest.xml
+
+# 3. MSIXパッケージ作成（Windows SDK必須）
+& "C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe" pack /d publish\portable /p publish\OtakAgent.msix /nv
+```
+
+##### 方法2: build-packages.ps1スクリプト使用
+```powershell
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX
+```
+
+##### 方法3: Visual Studio 2022使用（.NET 10 SDK対応後）
+```powershell
+msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64
+```
+
+#### Microsoft Store提出用
 - 生成されたMSIXパッケージをパートナーセンターにアップロード
-- パッケージはx64、x86、ARM64アーキテクチャをサポート
+- パッケージはx64アーキテクチャ対応
 - Windows 11バージョン22621.0以上が必要
+- 署名は必須（Store署名またはテスト用自己署名証明書）
 
 ### 日本語サポート
 アプリケーションはバイリンガルペルソナ（日本語/英語）をサポートし、ロケール検出にSystem.Globalizationを使用。UI文字列は現在ハードコードされていますが、ローカライゼーション対応準備済み。

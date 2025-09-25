@@ -134,35 +134,6 @@ if ($MSI -or $All) {
     } else {
         Write-Host "✗ WiX toolset not found. MSI build requires WiX v5." -ForegroundColor Yellow
         Write-Host "  Install with: dotnet tool install -g wix" -ForegroundColor Yellow
-
-        # Create a simple self-extracting archive as alternative
-        Write-Host "`nCreating self-extracting archive as alternative..." -ForegroundColor Cyan
-        $sfxPath = Join-Path $OutputDir "OtakAgent-Setup.exe"
-
-        # This would require 7-Zip or similar tool
-        if (Get-Command 7z -ErrorAction SilentlyContinue) {
-            $tempDir = Join-Path $env:TEMP "OtakAgent-SFX"
-            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-            Copy-Item "$OutputDir\portable\*" $tempDir -Recurse -Force
-
-            # Create config for SFX
-            $sfxConfig = @"
-;!@Install@!UTF-8!
-Title="OtakAgent Installer"
-BeginPrompt="Install OtakAgent?"
-RunProgram="OtakAgent.App.exe"
-;!@InstallEnd@!
-"@
-            $sfxConfig | Out-File -FilePath "$tempDir\config.txt" -Encoding UTF8
-
-            & 7z a -sfx7z.sfx "$sfxPath" "$tempDir\*"
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "✓ Self-extracting installer created: $sfxPath" -ForegroundColor Green
-            }
-            Remove-Item $tempDir -Recurse -Force
-        } else {
-            Write-Host "  7-Zip not found. Cannot create self-extracting archive." -ForegroundColor Yellow
-        }
     }
 }
 
