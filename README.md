@@ -43,47 +43,58 @@
 3. `OtakAgent.App.exe`を実行
 4. .NET 10ランタイムが必要です
 
-### ソースからのビルド
+## パッケージ作成方法
 
-#### パッケージビルドスクリプト
-すべての配布形式を簡単に作成できる`build-packages.ps1`スクリプトを用意しています：
+### 統合ビルドスクリプト
+`build-packages.ps1`を使用して、すべての配布形式を作成できます：
 
 ```powershell
-# すべてのパッケージを作成
+# すべてのパッケージを作成（推奨）
 powershell -ExecutionPolicy Bypass -File build-packages.ps1 -All
 
-# 個別に作成
-powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable  # ポータブル版
-powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX      # MSIX（要VS2022）
-powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI       # MSI（要WiX）
+# 個別パッケージの作成
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable  # ポータブル版のみ
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI       # MSIインストーラーのみ
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX      # MSIXパッケージのみ
 ```
 
-#### 手動ビルド手順
+### パッケージの種類と要件
 
-##### ポータブル版の作成
+#### 1. ポータブル版 (ZIP)
+- **要件**: .NET 10 SDK
+- **出力**: `publish/OtakAgent-Portable.zip`
+- **用途**: インストール不要で使いたい場合
+
+#### 2. MSIインストーラー
+- **要件**: WiX Toolset v5（`dotnet tool install -g wix`でインストール）
+- **出力**: `publish/OtakAgent.msi`
+- **用途**: 標準的なWindowsインストーラーが必要な場合
+
+#### 3. MSIXパッケージ（Microsoft Store用）
+- **要件**: Visual Studio 2022 + Windows Application Packaging Project拡張
+- **出力**: `OtakAgent.Package/AppPackages/`配下
+- **用途**: Microsoft Store配布用
+
+### 手動ビルド手順（上級者向け）
+
+#### ポータブル版
 ```powershell
-dotnet publish src/OtakAgent.App/OtakAgent.App.csproj -c Release -r win-x64 --self-contained false -o ./publish/portable -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable -p:PublishSingleFile=true
 Compress-Archive -Path './publish/portable/*' -DestinationPath './publish/OtakAgent-Portable.zip' -Force
 ```
 
-##### MSIXパッケージの作成
-前提条件：
-- Visual Studio 2022（Windows Application Packaging Project拡張機能付き）
-- Windows SDK
-
+#### MSIインストーラー
 ```powershell
-# Visual Studio 2022のMSBuildを使用
-msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64 /p:UapAppxPackageBuildMode=StoreUpload
+# WiX v5がインストール済みの場合
+cd installer
+wix build OtakAgent.wxs -o ../publish/OtakAgent.msi
+cd ..
 ```
 
-##### MSIインストーラーの作成
-前提条件：
-- WiX Toolset v3またはv4
-
+#### MSIXパッケージ
 ```powershell
-# WiX v4を使用
-dotnet tool install -g wix
-wix build installer\OtakAgent.wxs -o publish\OtakAgent.msi
+# Visual Studio 2022必須
+msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64
 ```
 
 ## 設定
@@ -147,23 +158,41 @@ wix build installer\OtakAgent.wxs -o publish\OtakAgent.msi
 ## プロジェクト構造
 ```
 otak-agent/
-  CLAUDE.md                  # Claude Codeのためのガイドライン
-  README.md                  # このファイル
-  build-packages.ps1         # パッケージビルドスクリプト
-  docs/                      # ドキュメント
-    privacy.md              # プライバシーポリシー
-    index.md                # GitHub Pages用
-  src/
-    OtakAgent.Core/         # ビジネスロジック層
-      Configuration/        # 設定管理
-      Services/            # チャット、クリップボード、システムリソース監視
-    OtakAgent.App/          # プレゼンテーション層
-      Forms/                # WinForms UI
-      Resources/            # GIF、PNG、WAVファイル
-  agent-talk-main/          # レガシー実装（参照用）
-  OtakAgent.Package/        # MSIX/Storeパッケージング資産
-  installer/                # MSIインストーラー定義
-  publish/                  # ビルド出力ディレクトリ
+├── build-packages.ps1      # 統合パッケージビルドスクリプト
+├── otak-agent.sln          # Visual Studioソリューション
+├── README.md               # プロジェクトドキュメント（日本語）
+├── CLAUDE.md               # Claude Code用ガイドライン
+├── LICENSE                 # MITライセンスファイル
+├── .gitignore              # Git除外設定
+│
+├── src/                    # ソースコード
+│   ├── OtakAgent.Core/     # ビジネスロジック層
+│   │   ├── Configuration/  # 設定管理とINI移行
+│   │   └── Services/       # チャット、クリップボード、システムリソース監視
+│   └── OtakAgent.App/      # プレゼンテーション層
+│       ├── Forms/          # WinForms UI（メイン、設定、バブル）
+│       └── Resources/      # アセット（GIF、PNG、WAVファイル）
+│
+├── installer/              # MSIインストーラー定義
+│   ├── OtakAgent.wxs       # WiX v5定義ファイル（日本語対応）
+│   └── license.rtf        # インストーラー用ライセンス
+│
+├── OtakAgent.Package/      # MSIX/Microsoft Storeパッケージング
+│   ├── Package.appxmanifest    # MSIXマニフェスト
+│   ├── OtakAgent.Package.wapproj # Visual Studioパッケージングプロジェクト
+│   ├── Images/                  # Storeアセット（タイル、アイコン）
+│   ├── create-certificate.ps1   # 自己署名証明書生成
+│   └── generate-assets.ps1      # Storeアセット生成
+│
+├── docs/                   # GitHub Pagesドキュメント
+│   ├── index.md            # トップページ（日本語）
+│   ├── privacy.md          # プライバシーポリシー（日本語）
+│   └── _config.yml         # Jekyll設定
+│
+└── publish/                # ビルド出力（.gitignore対象）
+    ├── OtakAgent-Portable.zip  # ポータブル版パッケージ
+    ├── OtakAgent.msi           # MSIインストーラー
+    └── portable/               # ポータブル版作業ディレクトリ
 ```
 
 ## 開発ノート
@@ -200,12 +229,9 @@ otak-agent/
 - 現在はVisual Studioのデバッガーを使用してデバッグ可能
 
 ## ライセンスとクレジット
-- このプロジェクトはオープンソースです
-- 元のAgentTalk実装に基づいています
+- このプロジェクトはMITライセンスのオープンソースです
+- クラシックなAgentTalk実装を.NET 10で最新化
 - アイコンとキャラクターアセットは独自デザイン
-
-## レガシー参照
-元のAgentTalk実装（C++ブリッジを使用した.NET Framework 3.5をターゲット）は`agent-talk-main/`に残っており、最新化中にUIや人格動作を比較するために使用できます。
 
 ## お問い合わせ
 - **Issues**: [GitHub Issues](https://github.com/tsuyoshi-otake/otak-agent/issues)

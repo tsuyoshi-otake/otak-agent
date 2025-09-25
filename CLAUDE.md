@@ -20,10 +20,17 @@
 - **クリーンビルド**: `dotnet clean && dotnet build`
 - **パッケージの復元**: `dotnet restore`
 
-### パブリッシュ
-- **配布用パブリッシュ**: `dotnet publish -c Release -r win-x64 --self-contained false`
-- **自己完結型パブリッシュ**: `dotnet publish -c Release -r win-x64 --self-contained true`
-- **ポータブル版作成**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable`
+### パッケージ作成
+統合ビルドスクリプト`build-packages.ps1`を使用：
+- **すべてのパッケージ作成**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -All`
+- **ポータブル版のみ**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable`
+- **MSIのみ**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI`
+- **MSIXのみ**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX`
+
+必要な前提条件：
+- ポータブル版: .NET 10 SDK
+- MSI: WiX v5（`dotnet tool install -g wix`）
+- MSIX: Visual Studio 2022 + Windows Application Packaging Project拡張
 
 ### テスト（実装時）
 - **全テスト実行**: `dotnet test`
@@ -59,6 +66,47 @@
 - 会話履歴を保持したまま新規入力が可能
 - プレースホルダーテキストは表示されない
 - 「リセット」ボタンが常に表示される
+
+## プロジェクト構造
+
+### ディレクトリ構成
+```
+otak-agent/
+├── build-packages.ps1      # 統合パッケージビルドスクリプト
+├── otak-agent.sln          # Visual Studioソリューション
+├── README.md               # プロジェクトドキュメント（日本語）
+├── CLAUDE.md               # このファイル（Claude Code用ガイドライン）
+├── LICENSE                 # ライセンスファイル
+├── .gitignore              # Gitignore設定
+│
+├── src/                    # ソースコード
+│   ├── OtakAgent.Core/     # ビジネスロジック層
+│   │   ├── Configuration/  # 設定管理
+│   │   └── Services/       # チャット、クリップボード、システムリソース監視
+│   └── OtakAgent.App/      # プレゼンテーション層
+│       ├── Forms/          # WinForms UI
+│       └── Resources/      # アセット（GIF、PNG、WAVファイル）
+│
+├── installer/              # MSIインストーラー定義
+│   ├── OtakAgent.wxs       # WiX v5定義ファイル
+│   └── license.rtf        # インストーラー用ライセンス
+│
+├── OtakAgent.Package/      # MSIX/Storeパッケージング
+│   ├── Package.appxmanifest    # MSIXマニフェスト
+│   ├── Images/                 # Storeアセット
+│   ├── create-certificate.ps1  # 証明書生成スクリプト
+│   └── generate-assets.ps1     # アセット生成スクリプト
+│
+├── docs/                   # GitHub Pagesドキュメント
+│   ├── index.md            # トップページ（日本語）
+│   ├── privacy.md          # プライバシーポリシー（日本語）
+│   └── _config.yml         # Jekyll設定
+│
+└── publish/                # ビルド出力（.gitignore対象）
+    ├── OtakAgent-Portable.zip  # ポータブル版
+    ├── OtakAgent.msi           # MSIインストーラー
+    └── portable/               # ポータブル版作業ディレクトリ
+```
 
 ## アーキテクチャ概要
 
@@ -99,6 +147,17 @@
 
 ## 重要なコンテキスト
 
+### プロジェクト構成
+単一の統合ビルドスクリプト`build-packages.ps1`で全パッケージング処理を管理。不要なスクリプトは削除済み。
+
+### 重要なファイル
+- **build-packages.ps1**: 統合パッケージングスクリプト（Portable/MSI/MSIX対応）
+- **installer/OtakAgent.wxs**: WiX v5用MSI定義ファイル
+- **OtakAgent.Package/**: MSIX関連ファイル
+  - `Package.appxmanifest`: MSIXマニフェスト
+  - `create-certificate.ps1`: 署名証明書生成
+  - `generate-assets.ps1`: Storeアセット生成
+
 ### アセット管理
 GIF/PNG/WAVリソースは現在`src/OtakAgent.App/Resources/`にあり、ビルド時に出力にコピーされます。透過処理にはマゼンタカラーキー（RGB 255,0,255）を使用。
 
@@ -131,13 +190,9 @@ Microsoft Store提出用：
 - 生成されたMSIXパッケージをパートナーセンターにアップロード
 - パッケージはx64、x86、ARM64アーキテクチャをサポート
 - Windows 11バージョン22621.0以上が必要
-- 詳細なStore提出ガイドは`README_MSIX.md`を参照
 
 ### 日本語サポート
 アプリケーションはバイリンガルペルソナ（日本語/英語）をサポートし、ロケール検出にSystem.Globalizationを使用。UI文字列は現在ハードコードされていますが、ローカライゼーション対応準備済み。
-
-### レガシー互換性
-`agent-talk-main/`フォルダには参照用の元の.NET Framework 3.5実装が含まれます。レガシーコードは変更しないでください - 動作比較のためだけに保持されています。
 
 ### Windows固有機能
 - クリップボード監視とウィンドウ管理にP/Invokeを使用

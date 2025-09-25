@@ -106,90 +106,34 @@ if ($MSIX -or $All) {
 if ($MSI -or $All) {
     Write-Host "`n[3/3] Creating MSI Installer..." -ForegroundColor Green
 
-    # Check if WiX is available
-    $wixPath = Get-Command candle.exe -ErrorAction SilentlyContinue
+    # Check if WiX v5 is available
+    $wixPath = Get-Command wix -ErrorAction SilentlyContinue
     if ($wixPath) {
-        Write-Host "Found WiX toolset" -ForegroundColor Cyan
+        Write-Host "Found WiX v5 toolset" -ForegroundColor Cyan
 
-        # Create WiX source file if it doesn't exist
+        # Check if WiX source file exists
         $wxsPath = ".\installer\OtakAgent.wxs"
         if (!(Test-Path $wxsPath)) {
-            Write-Host "Creating WiX source file..." -ForegroundColor Yellow
-            New-Item -ItemType Directory -Path ".\installer" -Force | Out-Null
-
-            $wxsContent = @'
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="*"
-             Name="OtakAgent"
-             Language="1033"
-             Version="1.0.0.0"
-             Manufacturer="OtakAgent Team"
-             UpgradeCode="12345678-1234-1234-1234-123456789ABC">
-
-        <Package InstallerVersion="200"
-                 Compressed="yes"
-                 InstallScope="perUser" />
-
-        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-        <MediaTemplate EmbedCab="yes" />
-
-        <Feature Id="ProductFeature" Title="OtakAgent" Level="1">
-            <ComponentGroupRef Id="ProductComponents" />
-            <ComponentRef Id="ApplicationShortcut" />
-        </Feature>
-
-        <Icon Id="OtakAgent.ico" SourceFile="..\src\OtakAgent.App\Resources\app.ico" />
-        <Property Id="ARPPRODUCTICON" Value="OtakAgent.ico" />
-    </Product>
-
-    <Fragment>
-        <Directory Id="TARGETDIR" Name="SourceDir">
-            <Directory Id="LocalAppDataFolder">
-                <Directory Id="INSTALLFOLDER" Name="OtakAgent" />
-            </Directory>
-            <Directory Id="ProgramMenuFolder">
-                <Directory Id="ApplicationProgramsFolder" Name="OtakAgent"/>
-            </Directory>
-        </Directory>
-    </Fragment>
-
-    <Fragment>
-        <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-            <Component Id="OtakAgent.App.exe">
-                <File Source="..\publish\portable\OtakAgent.App.exe" />
-            </Component>
-        </ComponentGroup>
-
-        <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder">
-            <Shortcut Id="ApplicationStartMenuShortcut"
-                      Name="OtakAgent"
-                      Description="AI Agent Assistant"
-                      Target="[#OtakAgent.App.exe]"
-                      WorkingDirectory="INSTALLFOLDER"/>
-            <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-            <RegistryValue Root="HKCU" Key="Software\OtakAgent" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-        </Component>
-    </Fragment>
-</Wix>
-'@
-            $wxsContent | Out-File -FilePath $wxsPath -Encoding UTF8
+            Write-Host "WiX source file not found at $wxsPath" -ForegroundColor Red
+            Write-Host "Please create the installer\OtakAgent.wxs file first." -ForegroundColor Yellow
+            return
         }
 
-        # Compile and link MSI
-        $objPath = ".\installer\OtakAgent.wixobj"
+        # Build MSI with WiX v5
         $msiPath = Join-Path $OutputDir "OtakAgent.msi"
 
-        & candle.exe -out $objPath $wxsPath
+        Push-Location installer
+        & wix build OtakAgent.wxs -o $msiPath
+        Pop-Location
+
         if ($LASTEXITCODE -eq 0) {
-            & light.exe -out $msiPath $objPath
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "✓ MSI installer created: $msiPath" -ForegroundColor Green
-            }
+            Write-Host "✓ MSI installer created: $msiPath" -ForegroundColor Green
+        } else {
+            Write-Host "✗ MSI build failed!" -ForegroundColor Red
         }
     } else {
-        Write-Host "✗ WiX toolset not found. MSI build requires WiX v3 or v4." -ForegroundColor Yellow
-        Write-Host "  Download from: https://wixtoolset.org/releases/" -ForegroundColor Yellow
+        Write-Host "✗ WiX toolset not found. MSI build requires WiX v5." -ForegroundColor Yellow
+        Write-Host "  Install with: dotnet tool install -g wix" -ForegroundColor Yellow
 
         # Create a simple self-extracting archive as alternative
         Write-Host "`nCreating self-extracting archive as alternative..." -ForegroundColor Cyan
