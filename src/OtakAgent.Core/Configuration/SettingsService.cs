@@ -47,9 +47,34 @@ public sealed class SettingsService
             );
 
             // Ensure directory exists
-            Directory.CreateDirectory(appDataPath);
+            try
+            {
+                Directory.CreateDirectory(appDataPath);
+            }
+            catch (Exception ex)
+            {
+                // If we can't create AppData directory, fall back to temp
+                System.Diagnostics.Debug.WriteLine($"Failed to create AppData directory: {ex.Message}");
+                appDataPath = Path.GetTempPath();
+            }
 
-            return Path.Combine(appDataPath, "agenttalk.settings.json");
+            var appDataSettingsPath = Path.Combine(appDataPath, "agenttalk.settings.json");
+
+            // Copy initial settings from Program Files if AppData file doesn't exist
+            if (!File.Exists(appDataSettingsPath) && File.Exists(defaultPath))
+            {
+                try
+                {
+                    File.Copy(defaultPath, appDataSettingsPath, false);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to copy initial settings: {ex.Message}");
+                    // Will create default settings later
+                }
+            }
+
+            return appDataSettingsPath;
         }
 
         // For portable version, use the provided path (next to exe)
@@ -159,12 +184,41 @@ public sealed class SettingsService
             Model = settings.Model,
             SystemPrompt = SecureStringHelper.SanitizeInput(settings.SystemPrompt),
             PersonalityOverride = SecureStringHelper.SanitizeInput(settings.PersonalityOverride),
-            LastUserMessage = SecureStringHelper.SanitizeInput(settings.LastUserMessage)
+            LastUserMessage = SecureStringHelper.SanitizeInput(settings.LastUserMessage),
+            EnableWebSearch = settings.EnableWebSearch,
+            SystemPromptPresets = settings.SystemPromptPresets,
+            SelectedPresetId = settings.SelectedPresetId
         };
 
-        Directory.CreateDirectory(Path.GetDirectoryName(_settingsFilePath)!);
-        await using var stream = File.Create(_settingsFilePath);
-        await JsonSerializer.SerializeAsync(stream, settingsToSave, _jsonOptions, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var directory = Path.GetDirectoryName(_settingsFilePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            await using var stream = File.Create(_settingsFilePath);
+            await JsonSerializer.SerializeAsync(stream, settingsToSave, _jsonOptions, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save settings to {_settingsFilePath}: {ex.Message}");
+            // Try to save to temp as fallback
+            try
+            {
+                var tempPath = Path.Combine(Path.GetTempPath(), "OtakAgent", "agenttalk.settings.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+                await using var tempStream = File.Create(tempPath);
+                await JsonSerializer.SerializeAsync(tempStream, settingsToSave, _jsonOptions, cancellationToken).ConfigureAwait(false);
+                System.Diagnostics.Debug.WriteLine($"Settings saved to temp location: {tempPath}");
+            }
+            catch
+            {
+                // If we can't save anywhere, just continue - settings will be in memory
+                System.Diagnostics.Debug.WriteLine("Could not save settings to any location");
+            }
+        }
     }
 
     private async Task<AgentTalkSettings> LoadUnlockedAsync(CancellationToken cancellationToken)
