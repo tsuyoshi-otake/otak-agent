@@ -1,89 +1,89 @@
 ---
 layout: default
-title: Privacy Policy - otak-agent
+title: プライバシーポリシー - otak-agent
 ---
 
-# Privacy Policy
+# プライバシーポリシー
 
-*Last updated: January 2025*
+*最終更新: 2025年9月*
 
-## Overview
+## 概要
 
-otak-agent ("the Application") is committed to protecting your privacy. This Privacy Policy explains how we handle your information when you use our desktop assistant application.
+otak-agent（以下「本アプリケーション」）は、お客様のプライバシーを保護することに取り組んでいます。このプライバシーポリシーは、デスクトップアシスタントアプリケーションを使用する際の情報の取り扱いについて説明します。
 
-## Information We Collect
+## 収集する情報
 
-The Application may collect and store the following information **locally on your device**:
+本アプリケーションは以下の情報を**お客様のデバイス上にローカルで**収集・保存する場合があります：
 
-- **Chat History**: Conversations with the AI assistant (stored locally)
-- **API Keys**: Your OpenAI-compatible API keys (encrypted and stored locally)
-- **Application Settings**: Your preferences and configuration choices
-- **Clipboard Content**: Text captured via the double Ctrl+C hotkey (processed locally)
+- **チャット履歴**: AIアシスタントとの会話（ローカル保存）
+- **APIキー**: OpenAI互換APIキー（暗号化してローカル保存）
+- **アプリケーション設定**: お客様の設定と構成の選択
+- **クリップボード内容**: ダブルCtrl+Cホットキーでキャプチャされたテキスト（ローカル処理）
 
-## How We Use Your Information
+## 情報の使用方法
 
-The information collected is used exclusively for:
+収集された情報は以下の目的でのみ使用されます：
 
-- Providing AI chat functionality
-- Saving your preferences and settings
-- Improving your experience with the Application
-- Maintaining conversation context during your session
+- AIチャット機能の提供
+- 設定と環境設定の保存
+- アプリケーション体験の向上
+- セッション中の会話コンテキストの維持
 
-## Data Storage
+## データ保存
 
-**All data is stored locally on your device.** We do not:
-- Upload your data to external servers
-- Share your information with third parties
-- Track your usage or collect analytics
-- Store your conversations in the cloud
+**すべてのデータはお客様のデバイスにローカル保存されます。** 私たちは以下を行いません：
+- 外部サーバーへのデータアップロード
+- 第三者との情報共有
+- 使用状況の追跡または分析の収集
+- クラウドへの会話の保存
 
-The only external communication occurs when:
-- You interact with your configured OpenAI-compatible API endpoint
-- You check for application updates (optional)
+外部通信は以下の場合にのみ発生します：
+- 設定されたOpenAI互換APIエンドポイントとの対話時
+- アプリケーション更新のチェック時（オプション）
 
-## API Communication
+## API通信
 
-When you use the chat feature:
-- Messages are sent directly to the API endpoint you configure
-- Communication follows the API provider's privacy policy
-- We do not intercept or store API responses beyond your local device
+チャット機能を使用する際：
+- メッセージは設定したAPIエンドポイントに直接送信されます
+- 通信はAPIプロバイダーのプライバシーポリシーに従います
+- ローカルデバイス以外でのAPI応答の傍受や保存は行いません
 
-## Data Security
+## データセキュリティ
 
-Your data security is important to us:
-- API keys are encrypted using Windows Data Protection API
-- Settings files are stored in standard Windows application directories
-- No data transmission occurs without your explicit action
+お客様のデータセキュリティは重要です：
+- APIキーはWindows Data Protection APIを使用して暗号化されます
+- 設定ファイルは標準的なWindowsアプリケーションディレクトリに保存されます
+- お客様の明示的な操作なしにデータ送信は行われません
 
-## Your Rights
+## お客様の権利
 
-You have complete control over your data:
-- **Access**: All data is stored in accessible local files
-- **Deletion**: Remove the application and its data folder to delete all information
-- **Portability**: Export your settings and history from the application directory
-- **Modification**: Edit or clear your data at any time through the application
+お客様はデータを完全に制御できます：
+- **アクセス**: すべてのデータはアクセス可能なローカルファイルに保存されています
+- **削除**: アプリケーションとそのデータフォルダを削除してすべての情報を削除できます
+- **ポータビリティ**: アプリケーションディレクトリから設定と履歴をエクスポートできます
+- **変更**: アプリケーションを通じていつでもデータを編集またはクリアできます
 
-## Children's Privacy
+## 子供のプライバシー
 
-The Application is not intended for children under 13. We do not knowingly collect information from children.
+本アプリケーションは13歳未満の子供向けではありません。私たちは故意に子供から情報を収集しません。
 
-## Changes to This Policy
+## このポリシーの変更
 
-We may update this Privacy Policy periodically. Changes will be posted on this page with an updated revision date.
+このプライバシーポリシーは定期的に更新される場合があります。変更は更新日とともにこのページに掲載されます。
 
-## Contact Us
+## お問い合わせ
 
-If you have questions about this Privacy Policy or the Application:
+このプライバシーポリシーまたはアプリケーションについてご質問がある場合：
 
 - **GitHub Issues**: [https://github.com/tsuyoshi-otake/otak-agent/issues](https://github.com/tsuyoshi-otake/otak-agent/issues)
-- **Project Page**: [https://github.com/tsuyoshi-otake/otak-agent](https://github.com/tsuyoshi-otake/otak-agent)
+- **プロジェクトページ**: [https://github.com/tsuyoshi-otake/otak-agent](https://github.com/tsuyoshi-otake/otak-agent)
 
-## Compliance
+## コンプライアンス
 
-This Application complies with:
-- Windows Store policies
-- General Data Protection Regulation (GDPR) principles
-- California Consumer Privacy Act (CCPA) requirements
+本アプリケーションは以下に準拠しています：
+- Windows Storeポリシー
+- 一般データ保護規則（GDPR）の原則
+- カリフォルニア州消費者プライバシー法（CCPA）の要件
 
 ---
 

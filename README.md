@@ -14,6 +14,7 @@
 - GPT-5およびGPT-5 Codexモデルをサポート（最新の/v1/responsesエンドポイント使用）
 - Webサーチ機能の統合（GPT-5シリーズ、GPT-4.1シリーズで利用可能）
 - システムプロンプトに現在時刻を自動埋め込み（日本語UIではJST、英語UIではUTC）
+- **会話継続モード**: 応答表示中に入力ボタンまたはCtrl+Enterで会話を継続
 
 ## 始めるには
 ### 前提条件
@@ -32,97 +33,58 @@
 
 #### ビルド済みパッケージのダウンロード
 - **GitHubリリース**: [最新リリース](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)からダウンロード
-  - `otak-agent.msi` - Windowsインストーラー（推奨）
-  - `otak-agent-portable.zip` - インストール/アンインストールスクリプト付きポータブル版
+  - `OtakAgent-Portable.zip` - ポータブル版（推奨）
+  - `OtakAgent.msix` - Microsoft Store形式パッケージ（開発者モード必要）
+  - `OtakAgent.msi` - Windowsインストーラー（WiXツールセットで生成）
 
-#### Microsoft Storeからインストール
-- Microsoft Storeで近日公開予定
-
-#### MSIインストール
-1. リリースから`otak-agent.msi`をダウンロード
-2. ダブルクリックしてインストール
-3. インストールウィザードに従う
-
-#### ポータブルインストール（ZIP）
-1. リリースから`otak-agent-portable.zip`をダウンロード
-2. ZIPファイルを解凍
-3. システム全体のインストールには管理者として`Install.bat`を実行
-4. またはポータブル使用のために`OtakAgent.App.exe`を直接実行
-
-アンインストールするには: 管理者として`Uninstall.bat`を実行（インストール版の場合）
+#### ポータブル版の使用方法
+1. リリースから`OtakAgent-Portable.zip`をダウンロード
+2. ZIPファイルを任意のフォルダに解凍
+3. `OtakAgent.App.exe`を実行
+4. .NET 10ランタイムが必要です
 
 ### ソースからのビルド
 
-#### Microsoft Store用MSIXパッケージの作成
+#### パッケージビルドスクリプト
+すべての配布形式を簡単に作成できる`build-packages.ps1`スクリプトを用意しています：
 
-##### 前提条件
-- Windows SDKがインストールされている（makeappx.exeを含む）
-  - 次のコマンドでインストール: `winget install --id Microsoft.WindowsSDK.10.0.18362`
+```powershell
+# すべてのパッケージを作成
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -All
 
-##### 手順
+# 個別に作成
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable  # ポータブル版
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX      # MSIX（要VS2022）
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI       # MSI（要WiX）
+```
 
-1. **リリース版をビルド**
-   ```bash
-   dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
-   ```
+#### 手動ビルド手順
 
-2. **Storeアセットを生成**（まだ作成されていない場合）
-   ```powershell
-   cd OtakAgent.Package
-   powershell -ExecutionPolicy Bypass -File generate-assets.ps1
-   cd ..
-   ```
+##### ポータブル版の作成
+```powershell
+dotnet publish src/OtakAgent.App/OtakAgent.App.csproj -c Release -r win-x64 --self-contained false -o ./publish/portable -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+Compress-Archive -Path './publish/portable/*' -DestinationPath './publish/OtakAgent-Portable.zip' -Force
+```
 
-3. **MSIX構造を作成**
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File create-simple-msix.ps1
-   ```
+##### MSIXパッケージの作成
+前提条件：
+- Visual Studio 2022（Windows Application Packaging Project拡張機能付き）
+- Windows SDK
 
-4. **MSIXパッケージをビルド**
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File build-msix.ps1
-   ```
+```powershell
+# Visual Studio 2022のMSBuildを使用
+msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64 /p:UapAppxPackageBuildMode=StoreUpload
+```
 
-   または手動で:
-   ```powershell
-   & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /d OtakAgent_MSIX /p OtakAgent.msix /nv /o
-   ```
+##### MSIインストーラーの作成
+前提条件：
+- WiX Toolset v3またはv4
 
-5. **インストールをテスト**（開発者モードが必要）
-   ```powershell
-   Add-AppxPackage -Path OtakAgent.msix -AllowUnsigned
-   ```
-
-#### ポータブルインストーラー（ZIP）の作成
-1. **ビルドとインストーラーの作成**
-   ```powershell
-   dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
-   powershell -ExecutionPolicy Bypass -File create-portable-installer.ps1
-   ```
-
-2. **出力**: 以下を含む`otak-agent-portable.zip`
-   - アプリケーションファイル
-   - `Install.bat` - インストーラースクリプト
-   - `Uninstall.bat` - アンインストーラースクリプト
-   - `README.txt` - 説明書
-
-#### MSIインストーラーの作成
-1. **WiX v6のインストール**（.NETツール）
-   ```bash
-   dotnet tool install -g wix
-   ```
-
-2. **MSIをビルドして作成**
-   ```bash
-   dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish
-   wix build simple-installer.wxs -o otak-agent.msi
-   ```
-
-#### Microsoft Storeへの提出
-1. [パートナーセンター](https://partner.microsoft.com/dashboard)に`OtakAgent.msix`をアップロード
-2. Microsoftが自動的にパッケージに署名します
-3. Storeリスト情報を入力
-4. 認定のために提出
+```powershell
+# WiX v4を使用
+dotnet tool install -g wix
+wix build installer\OtakAgent.wxs -o publish\OtakAgent.msi
+```
 
 ## 設定
 - 設定は実行ファイルの隣に`agenttalk.settings.json`として存在し、`OtakAgent.Core`の`SettingsService`によって管理されます
@@ -137,6 +99,7 @@
 - **キャラクター人格**: 有効がデフォルト
 - **会話履歴**: 保持がデフォルト
 - **最大トークン数**: 32768トークン
+- **自動クリップボードコピー**: 無効がデフォルト
 
 ## サポートされているAIモデル
 - GPT-5シリーズ: GPT-5、GPT-5 Codex（デフォルト）
@@ -145,15 +108,33 @@
 - ドロップダウンメニューから簡単にモデルを選択可能
 - GPT-5シリーズとGPT-4.1シリーズは自動的に最新のresponses APIを使用
 
-## ペルソナとホットキー
+## 操作方法とショートカット
+
+### 基本操作
+- **ダブルクリック**: バブル表示切り替え
+- **右クリック**: コンテキストメニュー表示
+- **ドラッグ**: ウィンドウ移動
+- **拡張ボタン（▼/▲）**: テキストエリアの5倍拡張
+
+### キーボードショートカット
+- **Ctrl+Enter**:
+  - 入力モード時：メッセージ送信
+  - 応答表示時：会話継続モードで新規入力
+- **Ctrl+Backspace**: 会話履歴リセット
+- **ダブルCtrl+C**: クリップボード内容を自動送信（設定で有効化時）
+
+### 会話継続モード
+応答が表示されている状態で「入力」ボタンをクリックまたはCtrl+Enterを押すと：
+- 会話履歴を保持したまま新規入力が可能
+- プレースホルダーテキストは表示されない
+- 「リセット」ボタンが常に表示される
+- プロンプトが「会話を続けてください...」に変わる
+
+## ペルソナとプロンプト
 - `PersonalityPromptBuilder`は、人格が有効な場合にClippyとKairuのプロンプトを再構築し、カスタムペルソナテキストを許可します
 - システムプロンプトに現在時刻が自動的に含まれます（日本語UIではJST形式、英語UIではUTC形式）
-- `ClipboardHotkeyService`はダブルCtrl+Cジェスチャーをリッスンし、設定可能なデバウンスを適用し、クリップボードの内容をチャットに転送します
-- UIショートカットは元のAgentTalk体験を反映しています：
-  - Ctrl+Enter: メッセージ送信（応答表示時は新規入力モードへ）
-  - Ctrl+Backspace: 会話リセット
-  - ダブルクリック: バブル表示切り替え
-  - 拡張ボタン（▼/▲）: テキストエリアの5倍拡張
+- プリセット機能で簡単にプロンプトを切り替え可能
+- カスタムプロンプトの保存と読み込みに対応
 
 ## API統合の詳細
 - **最新のResponses API**: GPT-5シリーズ、GPT-4.1シリーズは自動的に`/v1/responses`エンドポイントを使用
@@ -161,26 +142,29 @@
 - **Webサーチ統合**: Responses API使用時に自動的にWebサーチ機能が利用可能
 - **エラーハンドリング**: 不完全な応答やトークン制限の自動処理
 - **最大出力トークン**: 32768トークンまでの長い応答をサポート
+- **タイムアウト処理**: 30秒でタイムアウト、適切なエラーメッセージ表示
 
 ## プロジェクト構造
 ```
 otak-agent/
-  CLAUDE.md
-  README.md
-  docs/
-    modernization-architecture.md
-    modernization-roadmap.md
+  CLAUDE.md                  # Claude Codeのためのガイドライン
+  README.md                  # このファイル
+  build-packages.ps1         # パッケージビルドスクリプト
+  docs/                      # ドキュメント
+    privacy.md              # プライバシーポリシー
+    index.md                # GitHub Pages用
   src/
-    OtakAgent.Core/
-    OtakAgent.App/
-  agent-talk-main/
-  OtakAgent.Package/
+    OtakAgent.Core/         # ビジネスロジック層
+      Configuration/        # 設定管理
+      Services/            # チャット、クリップボード、システムリソース監視
+    OtakAgent.App/          # プレゼンテーション層
+      Forms/                # WinForms UI
+      Resources/            # GIF、PNG、WAVファイル
+  agent-talk-main/          # レガシー実装（参照用）
+  OtakAgent.Package/        # MSIX/Storeパッケージング資産
+  installer/                # MSIインストーラー定義
+  publish/                  # ビルド出力ディレクトリ
 ```
-
-- `OtakAgent.Core`: 設定、チャット、人格、ホットキーサービスをホスト
-- `OtakAgent.App`: WinForms UI、依存性注入ブートストラップ、リソースを提供
-- `agent-talk-main/`: 動作パリティチェック用のレガシーコードベースを保持
-- `OtakAgent.Package/`: Microsoft Store用のパッケージング資産
 
 ## 開発ノート
 - 設定インポートとプロンプトビルダー動作のユニットテストは`OtakAgent.Core.Tests`で計画されています
@@ -194,13 +178,38 @@ otak-agent/
 - **依存性注入**: Microsoft.Extensions.DependencyInjection
 - **JSON処理**: System.Text.Json
 - **HTTP通信**: System.Net.Http
+- **ビルドツール**: MSBuild、WiX Toolset（オプション）
 
 ## システム要件
-- **OS**: Windows 11
+- **OS**: Windows 11（Windows 10でも動作可能）
 - **アーキテクチャ**: x64、x86、ARM64
 - **ランタイム**: .NET 10ランタイム（self-containedビルドの場合は不要）
 - **メモリ**: 最小512MB RAM
-- **ストレージ**: 約50MBの空き容量
+- **ストレージ**: 約50MBの空き容量（ポータブル版）
+
+## トラブルシューティング
+
+### よくある問題と解決方法
+1. **APIキーエラー**: 設定画面でAPIキーを正しく入力してください
+2. **接続エラー**: インターネット接続とプロキシ設定を確認してください
+3. **文字化け**: Windows 11の日本語言語パックをインストールしてください
+4. **起動しない**: .NET 10ランタイムがインストールされているか確認してください
+
+### ログとデバッグ
+- アプリケーションログは将来のアップデートで追加予定
+- 現在はVisual Studioのデバッガーを使用してデバッグ可能
+
+## ライセンスとクレジット
+- このプロジェクトはオープンソースです
+- 元のAgentTalk実装に基づいています
+- アイコンとキャラクターアセットは独自デザイン
 
 ## レガシー参照
 元のAgentTalk実装（C++ブリッジを使用した.NET Framework 3.5をターゲット）は`agent-talk-main/`に残っており、最新化中にUIや人格動作を比較するために使用できます。
+
+## お問い合わせ
+- **Issues**: [GitHub Issues](https://github.com/tsuyoshi-otake/otak-agent/issues)
+- **Pull Requests**: 歓迎します！
+
+---
+最終更新: 2025年9月

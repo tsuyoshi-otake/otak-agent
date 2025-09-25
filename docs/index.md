@@ -1,82 +1,96 @@
 ---
 layout: default
-title: otak-agent - AI-powered Desktop Assistant
+title: otak-agent - AI搭載デスクトップアシスタント
 ---
 
 # otak-agent
 
-Modernizing the classic AgentTalk floating assistant into a single .NET 10 WinForms application without native dependencies.
+クラシックなAgentTalkフローティングアシスタントを、ネイティブ依存関係のない単一の.NET 10 WinFormsアプリケーションに最新化しました。
 
 ![otak-agent Logo](https://raw.githubusercontent.com/tsuyoshi-otake/otak-agent/main/OtakAgent.Package/Images/StoreLogo.png)
 
-## Features
+## 機能
 
-- **Classic Characters**: Nostalgic Clippy/Kairu personas that bring personality to your desktop
-- **AI-Powered Chat**: Integrates with OpenAI-compatible APIs for intelligent conversations
-- **Floating Window**: Always-on-top assistant that stays accessible
-- **Smart Hotkeys**: Double Ctrl+C capture for quick interactions
-- **Expandable Input**: 5x vertical expansion for longer text inputs
-- **Privacy-First**: All data stored locally, no external servers
+- **クラシックキャラクター**: 懐かしいClippy/Kairuペルソナがデスクトップに個性を追加
+- **AI搭載チャット**: OpenAI互換APIとの統合による知的な会話
+- **フローティングウィンドウ**: 常にアクセス可能な最前面アシスタント
+- **スマートホットキー**: クイック操作のためのダブルCtrl+Cキャプチャ
+- **拡張可能な入力**: より長いテキスト入力のための5倍垂直拡張
+- **会話継続モード**: 文脈を保持したまま会話を継続
+- **プライバシー優先**: すべてのデータはローカル保存、外部サーバーなし
 
-## Download
+## ダウンロード
 
-[**Download Latest Release**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
+[**最新リリースをダウンロード**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
 
-Available packages:
-- **otak-agent.msi** - Windows Installer (Recommended)
-- **otak-agent-portable.zip** - Portable version (No installation required)
+利用可能なパッケージ:
+- **OtakAgent-Portable.zip** - ポータブル版（推奨、インストール不要）
+- **OtakAgent.msix** - Microsoft Store形式パッケージ
+- **OtakAgent.msi** - Windowsインストーラー（WiXツールセット必要）
 
-## System Requirements
+## システム要件
 
-### Minimum
-- Windows 11
-- .NET 10 Runtime
-- 4GB RAM
-- Keyboard and Mouse
+### 最小要件
+- Windows 11（Windows 10でも動作可能）
+- .NET 10ランタイム
+- 512MB RAM
+- キーボードとマウス
 
-### Recommended
-- Windows 11 (latest version)
-- 8GB RAM
+### 推奨環境
+- Windows 11（最新バージョン）
+- 1GB以上のRAM
 
-## Getting Started
+## はじめに
 
-1. **Install the Application**
-   - Download from Microsoft Store or GitHub Releases
-   - Run the installer
+1. **アプリケーションのインストール**
+   - GitHubリリースからダウンロード
+   - ZIPファイルを解凍またはインストーラーを実行
 
-2. **Configure API Settings**
-   - Right-click the character icon
-   - Select "Settings"
-   - Enter your OpenAI-compatible API key
-   - Choose your preferred endpoint
+2. **API設定の構成**
+   - キャラクターアイコンを右クリック
+   - 「設定」を選択
+   - OpenAI互換APIキーを入力
+   - お好みのエンドポイントを選択
+   - モデル（デフォルト：GPT-5 Codex）を選択
 
-3. **Start Chatting**
-   - Double-click the character to show/hide chat bubble
-   - Type your message and press Ctrl+Enter to send
-   - Use Ctrl+Backspace to clear the conversation
+3. **チャット開始**
+   - キャラクターをダブルクリックでチャットバブルの表示/非表示
+   - メッセージを入力してCtrl+Enterで送信
+   - Ctrl+Backspaceで会話をクリア
 
-## Keyboard Shortcuts
+## キーボードショートカット
 
-- **Ctrl+Enter**: Send message
-- **Ctrl+Backspace**: Clear conversation
-- **Double Ctrl+C**: Capture clipboard content to chat
-- **Double-click character**: Toggle bubble visibility
+- **Ctrl+Enter**:
+  - 入力モード時：メッセージ送信
+  - 応答表示時：会話継続モードで新規入力
+- **Ctrl+Backspace**: 会話履歴をリセット
+- **ダブルCtrl+C**: クリップボード内容をチャットに送信（設定で有効化時）
+- **キャラクターをダブルクリック**: バブル表示切り替え
+- **拡張ボタン（▼/▲）**: テキストエリアの5倍拡張
 
-## Privacy
+## 会話継続モード
 
-Your privacy is important to us. All data is stored locally on your device. [Read our full Privacy Policy](privacy.html).
+応答が表示されている状態で「入力」ボタンをクリックまたはCtrl+Enterを押すと：
+- 会話履歴を保持したまま新規入力が可能
+- プレースホルダーテキストは表示されない
+- 「リセット」ボタンが常に表示される
+- プロンプトが「会話を続けてください...」に変わる
 
-## Support
+## プライバシー
 
-Need help? Found a bug? Have a feature request?
+あなたのプライバシーは重要です。すべてのデータはデバイスにローカル保存されます。[プライバシーポリシー全文を読む](privacy.html)。
 
-- [Open an Issue on GitHub](https://github.com/tsuyoshi-otake/otak-agent/issues)
-- [View Documentation](https://github.com/tsuyoshi-otake/otak-agent/wiki)
-- [Source Code](https://github.com/tsuyoshi-otake/otak-agent)
+## サポート
 
-## Open Source
+ヘルプが必要ですか？バグを見つけましたか？機能リクエストがありますか？
 
-otak-agent is open source software licensed under the MIT License. Contributions are welcome!
+- [GitHubで問題を報告](https://github.com/tsuyoshi-otake/otak-agent/issues)
+- [ドキュメントを表示](https://github.com/tsuyoshi-otake/otak-agent/wiki)
+- [ソースコード](https://github.com/tsuyoshi-otake/otak-agent)
+
+## オープンソース
+
+otak-agentはMITライセンスの下でライセンスされたオープンソースソフトウェアです。貢献を歓迎します！
 
 ---
 
