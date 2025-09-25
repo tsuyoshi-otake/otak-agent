@@ -21,12 +21,39 @@ public sealed class SettingsService
             throw new ArgumentException("Settings file path must be provided.", nameof(settingsFilePath));
         }
 
-        _settingsFilePath = settingsFilePath;
+        _settingsFilePath = GetAppropriateSettingsPath(settingsFilePath);
         _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
         {
             WriteIndented = true,
             PropertyNameCaseInsensitive = true
         };
+    }
+
+    private static string GetAppropriateSettingsPath(string defaultPath)
+    {
+        var baseDirectory = AppContext.BaseDirectory;
+
+        // Check if we're installed in Program Files (requires admin to write)
+        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+        if (baseDirectory.StartsWith(programFiles, StringComparison.OrdinalIgnoreCase) ||
+            baseDirectory.StartsWith(programFilesX86, StringComparison.OrdinalIgnoreCase))
+        {
+            // Use AppData for settings when installed in Program Files
+            var appDataPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "OtakAgent"
+            );
+
+            // Ensure directory exists
+            Directory.CreateDirectory(appDataPath);
+
+            return Path.Combine(appDataPath, "agenttalk.settings.json");
+        }
+
+        // For portable version, use the provided path (next to exe)
+        return defaultPath;
     }
 
     public string SettingsFilePath => _settingsFilePath;
