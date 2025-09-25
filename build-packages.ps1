@@ -123,11 +123,18 @@ if ($MSI -or $All) {
         $msiPath = Join-Path $OutputDir "OtakAgent.msi"
 
         Push-Location installer
-        & wix build OtakAgent.wxs -arch x64 -ext WixToolset.UI.wixext -o $msiPath
+        & wix build OtakAgent.wxs -arch x64 -ext WixToolset.UI.wixext -o "publish\OtakAgent.msi"
         Pop-Location
 
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "✓ MSI installer created: $msiPath" -ForegroundColor Green
+            # Copy MSI from installer/publish to main publish directory
+            $installerMsi = ".\installer\publish\OtakAgent.msi"
+            if (Test-Path $installerMsi) {
+                Copy-Item $installerMsi $msiPath -Force
+                Write-Host "✓ MSI installer created: $msiPath" -ForegroundColor Green
+            } else {
+                Write-Host "✓ MSI installer created: $msiPath" -ForegroundColor Green
+            }
         } else {
             Write-Host "✗ MSI build failed!" -ForegroundColor Red
         }

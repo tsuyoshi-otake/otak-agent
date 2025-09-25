@@ -22,6 +22,11 @@ public sealed class SettingsService
         }
 
         _settingsFilePath = GetAppropriateSettingsPath(settingsFilePath);
+
+        // Debug logging
+        System.Diagnostics.Debug.WriteLine($"[SettingsService] Original path: {settingsFilePath}");
+        System.Diagnostics.Debug.WriteLine($"[SettingsService] AppContext.BaseDirectory: {AppContext.BaseDirectory}");
+        System.Diagnostics.Debug.WriteLine($"[SettingsService] Using path: {_settingsFilePath}");
         _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
         {
             WriteIndented = true,
@@ -203,21 +208,12 @@ public sealed class SettingsService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to save settings to {_settingsFilePath}: {ex.Message}");
-            // Try to save to temp as fallback
-            try
-            {
-                var tempPath = Path.Combine(Path.GetTempPath(), "OtakAgent", "agenttalk.settings.json");
-                Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
-                await using var tempStream = File.Create(tempPath);
-                await JsonSerializer.SerializeAsync(tempStream, settingsToSave, _jsonOptions, cancellationToken).ConfigureAwait(false);
-                System.Diagnostics.Debug.WriteLine($"Settings saved to temp location: {tempPath}");
-            }
-            catch
-            {
-                // If we can't save anywhere, just continue - settings will be in memory
-                System.Diagnostics.Debug.WriteLine("Could not save settings to any location");
-            }
+            System.Diagnostics.Debug.WriteLine($"[SaveInternalAsync] Failed to save to: {_settingsFilePath}");
+            System.Diagnostics.Debug.WriteLine($"[SaveInternalAsync] Error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[SaveInternalAsync] Type: {ex.GetType().Name}");
+
+            // Re-throw with the actual path in the message
+            throw new InvalidOperationException($"Failed to save settings to {_settingsFilePath}: {ex.Message}", ex);
         }
     }
 
