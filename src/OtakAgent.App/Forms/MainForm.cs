@@ -653,16 +653,25 @@ public partial class MainForm : Form
         }
     }
 
-    private void EnterInputMode(bool clearText)
+    private void EnterInputMode(bool clearText, bool continuingConversation = false)
     {
         _sendButton.Text = SendText();
-        _secondaryButton.Text = OptionsText();
+        _secondaryButton.Text = continuingConversation ? ResetButtonText() : OptionsText();
         _inputTextBox.ReadOnly = false;
         _inputTextBox.BackColor = Color.White;
 
         if (clearText || string.IsNullOrWhiteSpace(_inputTextBox.Text) || IsPlaceholderText(_inputTextBox.Text))
         {
-            ShowPlaceholder();
+            // Don't show placeholder when continuing conversation
+            if (!continuingConversation)
+            {
+                ShowPlaceholder();
+            }
+            else
+            {
+                _inputTextBox.Text = string.Empty;
+                _isPlaceholderActive = false;
+            }
         }
         else
         {
@@ -670,7 +679,17 @@ public partial class MainForm : Form
         }
 
         _inputTextBox.Focus();
-        _promptLabel.Text = _settings.English ? "What would you like to do?" : "何をしますか？";
+
+        // Different prompt text when continuing conversation
+        if (continuingConversation)
+        {
+            _promptLabel.Text = _settings.English ? "Continue the conversation..." : "会話を続けてください...";
+        }
+        else
+        {
+            _promptLabel.Text = _settings.English ? "What would you like to do?" : "何をしますか？";
+        }
+
         UpdateTooltips();
     }
     private void BeginProcessing()
@@ -700,7 +719,7 @@ public partial class MainForm : Form
     private void UpdateTooltips()
     {
         var sendTooltip = _sendButton.Text == InputButtonText()
-            ? (_settings.English ? "Enter new message" : "新しいメッセージを入力")
+            ? (_settings.English ? "Enter new message (Ctrl+Enter)" : "新しいメッセージを入力 (Ctrl+Enter)")
             : (_settings.English ? "Send (Ctrl+Enter)" : "送信 (Ctrl+Enter)");
         _toolTip.SetToolTip(_sendButton, sendTooltip);
 
@@ -756,11 +775,10 @@ public partial class MainForm : Form
                 e.SuppressKeyPress = true;
 
                 // Check if we're in response mode (Input button is shown)
-                var inputText = _settings.English ? "Input" : "入力";
-                if (_sendButton.Text == inputText)
+                if (_sendButton.Text == InputButtonText())
                 {
-                    // Act as Input button - enter new input mode
-                    EnterInputMode(clearText: true);
+                    // Act as Input button - continue conversation
+                    EnterInputMode(clearText: true, continuingConversation: true);
                     return;
                 }
             }
@@ -768,7 +786,12 @@ public partial class MainForm : Form
             {
                 e.Handled = true;
                 e.SuppressKeyPress = true;
-                _ = HandleSecondaryButtonClickAsync();
+
+                // Only handle secondary button if it's showing Reset
+                if (_secondaryButton.Text == ResetButtonText())
+                {
+                    _ = HandleSecondaryButtonClickAsync();
+                }
             }
         }
     }
@@ -781,12 +804,10 @@ public partial class MainForm : Form
             e.SuppressKeyPress = true;
 
             // Check if we're in response mode (Input button is shown)
-            // Compare with actual button text, not the method result
-            var inputText = _settings.English ? "Input" : "入力";
-            if (_sendButton.Text == inputText)
+            if (_sendButton.Text == InputButtonText())
             {
-                // Act as Input button - enter new input mode
-                EnterInputMode(clearText: true);
+                // Act as Input button - continue conversation
+                EnterInputMode(clearText: true, continuingConversation: true);
                 return;
             }
             else
@@ -804,7 +825,12 @@ public partial class MainForm : Form
         {
             e.Handled = true;
             e.SuppressKeyPress = true;
-            _ = HandleSecondaryButtonClickAsync();
+
+            // Only handle reset if the secondary button is showing Reset
+            if (_secondaryButton.Text == ResetButtonText())
+            {
+                _ = HandleSecondaryButtonClickAsync();
+            }
         }
         else if (!e.Control && !e.Alt && !e.Shift)
         {

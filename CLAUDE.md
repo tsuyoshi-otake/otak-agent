@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Important Note
-As of September 24, 2025, GPT-5 and GPT-5 Codex are supported by this application. GPT-4.1 is the default model. The app automatically uses the modern /v1/responses endpoint for GPT-5 series and GPT-4.1 series models.
+As of September 24, 2025, GPT-5 and GPT-5 Codex are supported by this application. GPT-5 Codex is the default model. The app automatically uses the modern /v1/responses endpoint for GPT-5 series and GPT-4.1 series models.
 
 ## Framework Requirements
 - **.NET 10 RC1** (10.0.100-rc.1 or later)
