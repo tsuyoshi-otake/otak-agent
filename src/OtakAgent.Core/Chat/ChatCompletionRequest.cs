@@ -11,7 +11,7 @@ public sealed class ChatCompletionRequest
     public IList<ChatMessagePayload> Messages { get; set; } = new List<ChatMessagePayload>();
 
     [JsonPropertyName("max_tokens")]
-    public int MaxTokens { get; set; } = 8192;
+    public int MaxTokens { get; set; } = 32768;
 
     [JsonPropertyName("temperature")]
     public double Temperature { get; set; } = 1.0;

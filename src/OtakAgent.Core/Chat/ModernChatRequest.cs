@@ -27,7 +27,7 @@ namespace OtakAgent.Core.Chat
         public double Temperature { get; set; } = 0.7;
 
         [JsonPropertyName("max_output_tokens")]
-        public int MaxOutputTokens { get; set; } = 8192;
+        public int MaxOutputTokens { get; set; } = 32768;
 
         [JsonPropertyName("top_p")]
         public double TopP { get; set; } = 1.0;

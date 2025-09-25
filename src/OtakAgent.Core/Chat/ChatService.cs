@@ -320,7 +320,7 @@ public sealed record ChatRequest(
     string UserMessage,
     IReadOnlyList<ChatMessage>? History = null,
     string? SystemPrompt = null,
-    int MaxTokens = 8192,
+    int MaxTokens = 32768,
     double Temperature = 1.0,
     double TopP = 1.0,
     double FrequencyPenalty = 0.0,
