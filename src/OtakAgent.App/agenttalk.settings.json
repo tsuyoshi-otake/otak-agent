@@ -1,0 +1,17 @@
+{
+  "english": false,
+  "expandedTextbox": false,
+  "enablePersonality": true,
+  "autoCopyToClipboard": false,
+  "useConversationHistory": true,
+  "host": "https://api.openai.com",
+  "endpoint": "/v1/responses",
+  "apiKey": "",
+  "model": "gpt-5-codex",
+  "systemPrompt": "",
+  "personalityOverride": "",
+  "lastUserMessage": "",
+  "enableWebSearch": false,
+  "systemPromptPresets": [],
+  "selectedPresetId": ""
+}

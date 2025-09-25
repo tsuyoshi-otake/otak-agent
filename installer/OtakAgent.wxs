@@ -39,6 +39,12 @@
                           KeyPath="yes" />
                 </Component>
 
+                <Component Id="agenttalk.settings.json" Guid="A2B2C3D4-E5F6-4789-0123-456789ABCDEF">
+                    <File Id="agenttalk.settings.json"
+                          Source="..\publish\portable\agenttalk.settings.json"
+                          KeyPath="yes" />
+                </Component>
+
                 <!-- Resources folder -->
                 <Directory Id="ResourcesFolder" Name="Resources">
                     <Component Id="clippy.gif" Guid="B1B2C3D4-E5F6-4789-0123-456789ABCDEF">
@@ -142,6 +148,7 @@
         <!-- 機能定義 -->
         <Feature Id="ProductFeature" Title="OtakAgent" Level="1">
             <ComponentRef Id="OtakAgent.App.exe" />
+            <ComponentRef Id="agenttalk.settings.json" />
             <ComponentRef Id="clippy.gif" />
             <ComponentRef Id="clippy_start.gif" />
             <ComponentRef Id="kairu.gif" />
