@@ -35,15 +35,24 @@ Prerequisites:
 ### MSIX Package Creation
 Due to Visual Studio 2022's .NET SDK 9.0.305 not supporting .NET 10 RC1, use the Windows SDK makeappx tool directly:
 
-#### Method 1: Using makeappx (Recommended for .NET 10 RC1)
+#### Method 1: Using dedicated Store script (Recommended for Store submission)
+```powershell
+# Creates MSIX with all required Store assets
+powershell -ExecutionPolicy Bypass -File build-msix-store.ps1
+```
+
+#### Method 2: Manual creation with makeappx
 ```powershell
 # 1. Build portable version
 dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable
 
-# 2. Copy MSIX manifest
+# 2. Copy Store images (REQUIRED for Store submission)
+Copy-Item -Path OtakAgent.Package\Images -Destination publish\portable\Images -Recurse -Force
+
+# 3. Copy MSIX manifest
 Copy-Item OtakAgent.Package\Package.appxmanifest publish\portable\AppxManifest.xml
 
-# 3. Create MSIX package
+# 4. Create MSIX package
 & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /d publish\portable /p publish\otak-agent.msix /nv
 ```
 
@@ -58,6 +67,27 @@ msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:
 ```
 
 **Note**: Current workaround disables PublishReadyToRun for MSIX builds in `OtakAgent.App.csproj`.
+
+### Microsoft Store Submission Requirements
+1. **Package Identity** (must match Partner Center values):
+   - Name: `TsuyoshiOtake.otak-agent`
+   - Publisher: `CN=446F33A3-1C24-4281-B1A1-017002C04FEB` (from Partner Center)
+   - Version: Current is `1.5.2.0`
+
+2. **Package must include all Store images** in `Images/` folder:
+   - StoreLogo.png (50x50)
+   - Square44x44Logo.png (44x44)
+   - Square150x150Logo.png (150x150)
+   - SmallTile.png (71x71)
+   - LargeTile.png (310x310)
+   - Wide310x150Logo.png (310x150)
+   - SplashScreen.png (620x300)
+
+3. **Supported languages**: ja-JP, en-US (configured in Package.appxmanifest)
+
+4. **runFullTrust capability**: Required for desktop apps, needs approval during Store review
+
+5. **Package signing**: May be required before submission (Store handles this automatically)
 
 ### Version Management
 **IMPORTANT**: Always update the version number in `installer/OtakAgent.wxs` when releasing a new version.

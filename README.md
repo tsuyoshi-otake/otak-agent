@@ -24,6 +24,8 @@
 - Webサーチ機能の統合（GPT-5シリーズ、GPT-4.1シリーズで利用可能）
 - システムプロンプトに現在時刻を自動埋め込み（日本語UIではJST、英語UIではUTC）
 - **会話継続モード**: 応答表示中に入力ボタンまたはCtrl+Enterで会話を継続
+- **Windows自動起動対応**: 右クリックメニューから簡単設定、MSIインストーラーで自動設定
+- **二重起動防止**: Mutexによる多重起動防止機能搭載
 
 ## 始めるには
 ### 前提条件
@@ -42,12 +44,12 @@
 
 #### ビルド済みパッケージのダウンロード
 - **GitHubリリース**: [最新リリース](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)からダウンロード
-  - `OtakAgent-Portable.zip` - ポータブル版（推奨）
-  - `OtakAgent.msix` - Microsoft Store形式パッケージ（開発者モード必要）
-  - `OtakAgent.msi` - Windowsインストーラー（WiXツールセットで生成）
+  - `otak-agent-portable.zip` - ポータブル版（推奨）
+  - `otak-agent.msix` - Microsoft Store形式パッケージ（開発者モード必要）
+  - `otak-agent.msi` - Windowsインストーラー（Windows自動起動設定付き）
 
 #### ポータブル版の使用方法
-1. リリースから`OtakAgent-Portable.zip`をダウンロード
+1. リリースから`otak-agent-portable.zip`をダウンロード
 2. ZIPファイルを任意のフォルダに解凍
 3. `OtakAgent.App.exe`を実行
 4. .NET 10ランタイムが必要です
@@ -71,17 +73,17 @@ powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX      # MSIXパ
 
 #### 1. ポータブル版 (ZIP)
 - **要件**: .NET 10 SDK
-- **出力**: `publish/OtakAgent-Portable.zip`
+- **出力**: `publish/otak-agent-portable.zip`
 - **用途**: インストール不要で使いたい場合
 
 #### 2. MSIインストーラー
 - **要件**: WiX Toolset v5（`dotnet tool install -g wix`でインストール）
-- **出力**: `publish/OtakAgent.msi`
-- **用途**: 標準的なWindowsインストーラーが必要な場合
+- **出力**: `publish/otak-agent.msi`
+- **用途**: 標準的なWindowsインストーラーが必要な場合（Windows自動起動設定付き）
 
 #### 3. MSIXパッケージ（Microsoft Store用）
-- **要件**: Visual Studio 2022 + Windows Application Packaging Project拡張
-- **出力**: `OtakAgent.Package/AppPackages/`配下
+- **要件**: Windows SDK（makeappx.exe）またはVisual Studio 2022 + Windows Application Packaging Project拡張
+- **出力**: `publish/otak-agent.msix`
 - **用途**: Microsoft Store配布用
 
 ### 手動ビルド手順（上級者向け）
@@ -89,25 +91,28 @@ powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX      # MSIXパ
 #### ポータブル版
 ```powershell
 dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable -p:PublishSingleFile=true
-Compress-Archive -Path './publish/portable/*' -DestinationPath './publish/OtakAgent-Portable.zip' -Force
+Compress-Archive -Path './publish/portable/*' -DestinationPath './publish/otak-agent-portable.zip' -Force
 ```
 
 #### MSIインストーラー
 ```powershell
 # WiX v5がインストール済みの場合
 cd installer
-wix build OtakAgent.wxs -o ../publish/OtakAgent.msi
+wix build OtakAgent.wxs -o ../publish/otak-agent.msi
 cd ..
 ```
 
-#### MSIXパッケージ
+#### MSIXパッケージ（.NET 10 RC1対応）
 ```powershell
-# Visual Studio 2022必須
-msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64
+# Windows SDK makeappxツール使用
+dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable
+Copy-Item OtakAgent.Package\Package.appxmanifest publish\portable\AppxManifest.xml
+& "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /d publish\portable /p publish\otak-agent.msix /nv
 ```
 
 ## 設定
-- 設定は実行ファイルの隣に`agenttalk.settings.json`として存在し、`OtakAgent.Core`の`SettingsService`によって管理されます
+- 設定は実行ファイルの隣に`otak-agent.settings.json`として存在し、`OtakAgent.Core`の`SettingsService`によって管理されます
+- MSIインストール版では`%AppData%\otak-agent\otak-agent.settings.json`に保存され、アップグレード時も保持されます
 - 会話履歴はデフォルトでメモリに残り、オプションで`%AppData%/AgentTalk/history.json`に永続化できます
 - モデル選択はドロップダウンメニューから簡単に変更可能
 - APIキー、ホスト、エンドポイントは設定画面から簡単に設定可能
@@ -196,8 +201,9 @@ otak-agent/
 │   └── _config.yml         # Jekyll設定
 │
 └── publish/                # ビルド出力（.gitignore対象）
-    ├── OtakAgent-Portable.zip  # ポータブル版パッケージ
-    ├── OtakAgent.msi           # MSIインストーラー
+    ├── otak-agent-portable.zip  # ポータブル版パッケージ
+    ├── otak-agent.msi           # MSIインストーラー
+    ├── otak-agent.msix          # Microsoft Storeパッケージ
     └── portable/               # ポータブル版作業ディレクトリ
 ```
 

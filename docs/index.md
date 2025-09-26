@@ -18,16 +18,18 @@ title: otak-agent - AI搭載デスクトップアシスタント
 - **フローティングウィンドウ**: 常にアクセス可能な最前面アシスタント
 - **拡張可能な入力**: より長いテキスト入力のための5倍垂直拡張
 - **会話継続モード**: 文脈を保持したまま会話を継続
+- **Windows自動起動対応**: 右クリックメニューから簡単設定、MSIインストーラーで自動設定
+- **二重起動防止**: Mutexによる多重起動防止機能搭載
 - **プライバシー優先**: すべてのデータはローカル保存、外部サーバーなし
 
 ## ダウンロード
 
-[**最新リリースをダウンロード**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
+[**最新リリース v1.5.2 をダウンロード**](https://github.com/tsuyoshi-otake/otak-agent/releases/latest)
 
 利用可能なパッケージ:
-- **OtakAgent-Portable.zip** - ポータブル版（推奨、インストール不要）
-- **OtakAgent.msix** - Microsoft Store形式パッケージ
-- **OtakAgent.msi** - Windowsインストーラー（WiXツールセット必要）
+- **otak-agent-portable.zip** - ポータブル版（推奨、インストール不要）
+- **otak-agent.msix** - Microsoft Store形式パッケージ（開発者モード必要）
+- **otak-agent.msi** - Windowsインストーラー（Windows自動起動設定付き）
 
 ## システム要件
 
@@ -85,6 +87,19 @@ title: otak-agent - AI搭載デスクトップアシスタント
 - [GitHubで問題を報告](https://github.com/tsuyoshi-otake/otak-agent/issues)
 - [ドキュメントを表示](https://github.com/tsuyoshi-otake/otak-agent/wiki)
 - [ソースコード](https://github.com/tsuyoshi-otake/otak-agent)
+
+## 最新アップデート (v1.5.2)
+
+### 新機能
+- **Windows自動起動**: 右クリックメニューから「Windows起動時に自動起動」を選択可能
+- **MSIアップグレード改善**: 既存インストールを自動検出してアップグレード
+- **設定の保持**: MSIアップグレード時も設定（APIキー、プリセット等）を維持
+- **MSIX対応**: Microsoft Store配布用MSIXパッケージのサポート
+
+### 改善点
+- 二重起動防止機能の強化
+- インストール完了時の自動起動オプション
+- パッケージ名の統一（otak-agent-*.zip/msi/msix）
 
 ## オープンソース
 

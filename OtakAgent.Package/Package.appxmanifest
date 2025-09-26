@@ -6,9 +6,9 @@
          IgnorableNamespaces="uap rescap desktop">
 
   <Identity
-    Name="TsuyoshiOtake.OtakAgent"
-    Publisher="CN=TsuyoshiOtake, O=TsuyoshiOtake, C=JP"
-    Version="1.5.0.0" />
+    Name="TsuyoshiOtake.otak-agent"
+    Publisher="CN=446F33A3-1C24-4281-B1A1-017002C04FEB"
+    Version="1.5.2.0" />
 
   <Properties>
     <DisplayName>otak-agent</DisplayName>
@@ -21,7 +21,8 @@
   </Dependencies>
 
   <Resources>
-    <Resource Language="x-generate"/>
+    <Resource Language="ja-JP"/>
+    <Resource Language="en-US"/>
   </Resources>
 
   <Applications>
