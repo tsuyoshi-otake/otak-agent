@@ -32,8 +32,8 @@ public sealed class SystemPromptPreset
                 new()
                 {
                     Id = "japanese-translator",
-                    Name = "Japanese Translator",
-                    Prompt = "Translate into Japanese and return only the translation. Do not include any prefixes or explanations.",
+                    Name = "JP⇔EN Translator",
+                    Prompt = "Detect the input language. If the input is in English, translate it into Japanese. If the input is in Japanese, translate it into English. Return only the translation without any prefixes, explanations, or language indicators.",
                     IsBuiltIn = true
                 },
                 new()
@@ -80,8 +80,8 @@ public sealed class SystemPromptPreset
                 new()
                 {
                     Id = "japanese-translator",
-                    Name = "英日翻訳",
-                    Prompt = "日本語に翻訳した文章だけを返してください。「翻訳：」などの前置きや説明は一切不要です。",
+                    Name = "日英相互翻訳",
+                    Prompt = "入力された言語を判定してください。英語の場合は日本語に翻訳し、日本語の場合は英語に翻訳してください。翻訳結果のみを返し、「翻訳：」などの前置きや説明、言語表示は一切不要です。",
                     IsBuiltIn = true
                 },
                 new()

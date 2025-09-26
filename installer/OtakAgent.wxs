@@ -3,14 +3,18 @@
     <Package Name="OtakAgent"
              Language="1041"
              Codepage="932"
-             Version="1.0.0.0"
+             Version="1.2.0.0"
              Manufacturer="Tsuyoshi Otake"
              UpgradeCode="B7E5D3F2-8A4C-4E9B-9D1A-F5C8E3A2B1D0"
              InstallerVersion="500"
              Compressed="yes"
              Scope="perMachine">
 
-        <MajorUpgrade DowngradeErrorMessage="新しいバージョンの [ProductName] が既にインストールされています。" />
+        <!-- 自動アップグレード設定: 古いバージョンを自動的に削除 -->
+        <MajorUpgrade
+            DowngradeErrorMessage="新しいバージョンの [ProductName] が既にインストールされています。"
+            AllowSameVersionUpgrades="yes"
+            Schedule="afterInstallInitialize" />
 
         <Media Id="1" Cabinet="OtakAgent.cab" EmbedCab="yes" />
 

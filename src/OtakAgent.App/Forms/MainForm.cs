@@ -43,6 +43,8 @@ public partial class MainForm : Form
 
     private const string EnglishPlaceholderText = "Type your question here, and then click Send.";
     private const string JapanesePlaceholderText = "ここに質問を書いて『送信』ボタンを押してください。";
+    private const string EnglishNoApiKeyText = "Please configure your OpenAI API Key in Options.";
+    private const string JapaneseNoApiKeyText = "オプションでOpenAI API Keyを設定してください。";
 
     private bool _isPlaceholderActive;
 
@@ -398,6 +400,17 @@ public partial class MainForm : Form
             return;
         }
 
+        // Check if API key is configured
+        if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+        {
+            SystemSounds.Beep.Play();
+            var message = _settings.English
+                ? "Please configure your OpenAI API Key in Options first."
+                : "まずオプションでOpenAI API Keyを設定してください。";
+            MessageBox.Show(this, message, "otak-agent", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         try
         {
             BeginProcessing();
@@ -720,9 +733,22 @@ public partial class MainForm : Form
         _toolTip.SetToolTip(_secondaryButton, secondaryTooltip);
     }
 
-    private string PlaceholderText() => _settings.English ? EnglishPlaceholderText : JapanesePlaceholderText;
+    private string PlaceholderText()
+    {
+        // Check if API key is set
+        bool hasApiKey = !string.IsNullOrWhiteSpace(_settings.ApiKey);
 
-    private static bool IsPlaceholderText(string value) => value == EnglishPlaceholderText || value == JapanesePlaceholderText;
+        if (!hasApiKey)
+        {
+            return _settings.English ? EnglishNoApiKeyText : JapaneseNoApiKeyText;
+        }
+
+        return _settings.English ? EnglishPlaceholderText : JapanesePlaceholderText;
+    }
+
+    private static bool IsPlaceholderText(string value) =>
+        value == EnglishPlaceholderText || value == JapanesePlaceholderText ||
+        value == EnglishNoApiKeyText || value == JapaneseNoApiKeyText;
 
     private void ShowPlaceholder()
     {

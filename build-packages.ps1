@@ -46,7 +46,7 @@ if ($Portable -or $All) {
 
     if ($LASTEXITCODE -eq 0) {
         # Create ZIP archive
-        $zipPath = Join-Path $OutputDir "OtakAgent-Portable.zip"
+        $zipPath = Join-Path $OutputDir "otak-agent-portable.zip"
         Write-Host "Creating ZIP archive: $zipPath" -ForegroundColor Cyan
         Compress-Archive -Path "$portableDir\*" -DestinationPath $zipPath -Force
         Write-Host "✓ Portable package created: $zipPath" -ForegroundColor Green
@@ -86,7 +86,7 @@ if ($MSIX -or $All) {
             if ($LASTEXITCODE -eq 0) {
                 $msixPath = Get-ChildItem -Path "OtakAgent.Package\AppPackages" -Filter "*.msix" -Recurse | Select-Object -First 1
                 if ($msixPath) {
-                    $destPath = Join-Path $OutputDir "OtakAgent.msix"
+                    $destPath = Join-Path $OutputDir "otak-agent.msix"
                     Copy-Item $msixPath.FullName $destPath -Force
                     Write-Host "✓ MSIX package created: $destPath" -ForegroundColor Green
                 }
@@ -120,15 +120,15 @@ if ($MSI -or $All) {
         }
 
         # Build MSI with WiX v5
-        $msiPath = Join-Path $OutputDir "OtakAgent.msi"
+        $msiPath = Join-Path $OutputDir "otak-agent.msi"
 
         Push-Location installer
-        & wix build OtakAgent.wxs -arch x64 -ext WixToolset.UI.wixext -o "publish\OtakAgent.msi"
+        & wix build OtakAgent.wxs -arch x64 -ext WixToolset.UI.wixext -o "publish\otak-agent.msi"
         Pop-Location
 
         if ($LASTEXITCODE -eq 0) {
             # Copy MSI from installer/publish to main publish directory
-            $installerMsi = ".\installer\publish\OtakAgent.msi"
+            $installerMsi = ".\installer\publish\otak-agent.msi"
             if (Test-Path $installerMsi) {
                 Copy-Item $installerMsi $msiPath -Force
                 Write-Host "✓ MSI installer created: $msiPath" -ForegroundColor Green

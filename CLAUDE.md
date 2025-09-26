@@ -1,220 +1,241 @@
 # CLAUDE.md
 
-このファイルは、このリポジトリのコードを扱う際のClaude Code (claude.ai/code) のためのガイドラインです。
+This file provides guidelines for Claude Code (claude.ai/code) when working with this repository's code.
 
-## 重要事項
-2025年9月25日現在、このアプリケーションはGPT-5およびGPT-5 Codexをサポートしています。GPT-5 Codexがデフォルトモデルです。アプリケーションはGPT-5シリーズとGPT-4.1シリーズのモデルに対して自動的に最新の/v1/responsesエンドポイントを使用します。
+## Important Notes
+As of September 25, 2025, this application supports GPT-5 and GPT-5 Codex. GPT-5 Codex is the default model. The application automatically uses the latest /v1/responses endpoint for GPT-5 series and GPT-4.1 series models.
 
-## フレームワーク要件
-- **.NET 10 RC1** (10.0.100-rc.1以降)
-- デスクトップ開発ツール付きWindows 11
-- ターゲットフレームワーク:
-  - `net10.0` - OtakAgent.Core用
-  - `net10.0-windows` - OtakAgent.App用
+## Framework Requirements
+- **.NET 10 RC1** (10.0.100-rc.1 or later)
+- Windows 11 with desktop development tools
+- Target Frameworks:
+  - `net10.0` - For OtakAgent.Core
+  - `net10.0-windows` - For OtakAgent.App
 
-## 共通コマンド
+## Common Commands
 
-### ビルドと実行
-- **ソリューションのビルド**: `dotnet build otak-agent.sln`
-- **アプリケーションの実行**: `dotnet run --project src/OtakAgent.App`
-- **クリーンビルド**: `dotnet clean && dotnet build`
-- **パッケージの復元**: `dotnet restore`
+### Build and Run
+- **Build Solution**: `dotnet build otak-agent.sln`
+- **Run Application**: `dotnet run --project src/OtakAgent.App`
+- **Clean Build**: `dotnet clean && dotnet build`
+- **Restore Packages**: `dotnet restore`
 
-### パッケージ作成
-統合ビルドスクリプト`build-packages.ps1`を使用：
-- **すべてのパッケージ作成**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -All`
-- **ポータブル版のみ**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable`
-- **MSIのみ**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI`
-- **MSIXのみ**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX`
+### Package Creation
+Using the integrated build script `build-packages.ps1`:
+- **Build All Packages**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -All`
+- **Portable Only**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -Portable`
+- **MSI Only**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI`
+- **MSIX Only**: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX`
 
-必要な前提条件：
-- ポータブル版: .NET 10 SDK
-- MSI: WiX v5（`dotnet tool install -g wix`）
-- MSIX: Visual Studio 2022 + Windows Application Packaging Project拡張
+Prerequisites:
+- Portable: .NET 10 SDK
+- MSI: WiX v5 (`dotnet tool install -g wix`)
+- MSIX: Visual Studio 2022 + Windows Application Packaging Project extension
 
-### テスト（実装時）
-- **全テスト実行**: `dotnet test`
-- **特定テストプロジェクト実行**: `dotnet test src/OtakAgent.Core.Tests`
+### Version Management
+**IMPORTANT**: Always update the version number in `installer/OtakAgent.wxs` when releasing a new version.
 
-## 最近のUI改善
+#### Current Version
+- **v1.2.0.0** (September 26, 2025)
 
-### バブルウィンドウのレンダリング
-- 上部と下部の画像がクロップされることなく完全に表示
-- 下部は適切な外観のため5px下に延長
-- マゼンタカラーキー（RGB 255,0,255）による適切な透過処理
+#### Version Update Steps
+1. Open `installer/OtakAgent.wxs`
+2. Update `Version="X.Y.Z.0"` to the new version
+3. Rebuild MSI package: `powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSI`
 
-### 拡張可能なテキストエリア
-- バブルの右上角（位置: 200,8）にトグルボタン（▼/▲）
-- 有効時にテキストエリアを垂直方向に5倍拡張
-- フォームは下部位置を維持したまま上方向に拡大
-- 拡張状態に基づいてキャラクター位置を調整
+#### MSI Upgrade Configuration
+- **UpgradeCode**: `B7E5D3F2-8A4C-4E9B-9D1A-F5C8E3A2B1D0` (fixed value - DO NOT CHANGE)
+- **MajorUpgrade**: Automatically uninstalls older versions
+- **AllowSameVersionUpgrades**: Allows overwriting same version
 
-### UI要素の配置
-- プロンプトラベル: (8, 8)
-- テキスト入力: (8, 32) - 通常モード、拡張時は295px高さ
-- ボタン: テキストエリアの下に動的に配置
-- キャラクター: 拡張状態に基づいて位置調整
+#### Version Number Convention
+- Use **Major.Minor.Patch.0** format
+- Example: 1.2.0.0
+- MSI always uses 0 for the fourth number (build number)
 
-### インタラクティブ機能
-- キャラクターをダブルクリックでバブル表示切り替え
-- キャラクターを右クリックでコンテキストメニュー
-- テキストエリアの拡張/折りたたみボタン
-- アニメーショントランジションはフリーズ防止のためBeginInvokeで処理
+### Testing (When Implemented)
+- **Run All Tests**: `dotnet test`
+- **Run Specific Test Project**: `dotnet test src/OtakAgent.Core.Tests`
 
-### 会話継続モード
-- 応答表示中に「入力」ボタンまたはCtrl+Enterで会話継続
-- 会話履歴を保持したまま新規入力が可能
-- プレースホルダーテキストは表示されない
-- 「リセット」ボタンが常に表示される
+## Recent UI Improvements
 
-## プロジェクト構造
+### Bubble Window Rendering
+- Top and bottom images display fully without cropping
+- Bottom extends 5px lower for proper appearance
+- Proper transparency using magenta color key (RGB 255,0,255)
 
-### ディレクトリ構成
+### Expandable Text Area
+- Toggle button (▼/▲) in bubble's top-right corner (position: 200,8)
+- When enabled, text area expands vertically 5x
+- Form expands upward while maintaining bottom position
+- Character position adjusts based on expansion state
+
+### UI Element Positioning
+- Prompt label: (8, 8)
+- Text input: (8, 32) - normal mode, 295px height when expanded
+- Buttons: Dynamically positioned below text area
+- Character: Position adjusts based on expansion state
+
+### Interactive Features
+- Double-click character to toggle bubble visibility
+- Right-click character for context menu
+- Text area expand/collapse button
+- Animation transitions handled via BeginInvoke to prevent freezing
+
+### Conversation Continuation Mode
+- "Input" button or Ctrl+Enter during response display continues conversation
+- New input possible while maintaining conversation history
+- Placeholder text not displayed
+- "Reset" button always visible
+
+## Project Structure
+
+### Directory Layout
 ```
 otak-agent/
-├── build-packages.ps1      # 統合パッケージビルドスクリプト
-├── otak-agent.sln          # Visual Studioソリューション
-├── README.md               # プロジェクトドキュメント（日本語）
-├── CLAUDE.md               # このファイル（Claude Code用ガイドライン）
-├── LICENSE                 # ライセンスファイル
-├── .gitignore              # Gitignore設定
+├── build-packages.ps1      # Integrated package build script
+├── otak-agent.sln          # Visual Studio solution
+├── README.md               # Project documentation (Japanese)
+├── CLAUDE.md               # This file (Claude Code guidelines)
+├── LICENSE                 # License file
+├── .gitignore              # Git ignore settings
 │
-├── src/                    # ソースコード
-│   ├── OtakAgent.Core/     # ビジネスロジック層
-│   │   ├── Configuration/  # 設定管理
-│   │   └── Services/       # チャットサービス
-│   └── OtakAgent.App/      # プレゼンテーション層
+├── src/                    # Source code
+│   ├── OtakAgent.Core/     # Business logic layer
+│   │   ├── Configuration/  # Configuration management
+│   │   └── Services/       # Chat services
+│   └── OtakAgent.App/      # Presentation layer
 │       ├── Forms/          # WinForms UI
-│       └── Resources/      # アセット（GIF、PNG、WAVファイル）
+│       └── Resources/      # Assets (GIF, PNG, WAV files)
 │
-├── installer/              # MSIインストーラー定義
-│   ├── OtakAgent.wxs       # WiX v5定義ファイル
-│   └── license.rtf        # インストーラー用ライセンス
+├── installer/              # MSI installer definitions
+│   ├── OtakAgent.wxs       # WiX v5 definition file
+│   └── license.rtf        # Installer license
 │
-├── OtakAgent.Package/      # MSIX/Storeパッケージング
-│   ├── Package.appxmanifest    # MSIXマニフェスト
-│   ├── Images/                 # Storeアセット
-│   ├── create-certificate.ps1  # 証明書生成スクリプト
-│   └── generate-assets.ps1     # アセット生成スクリプト
+├── OtakAgent.Package/      # MSIX/Store packaging
+│   ├── Package.appxmanifest    # MSIX manifest
+│   ├── Images/                 # Store assets
+│   ├── create-certificate.ps1  # Certificate generation script
+│   └── generate-assets.ps1     # Asset generation script
 │
-├── docs/                   # GitHub Pagesドキュメント
-│   ├── index.md            # トップページ（日本語）
-│   ├── privacy.md          # プライバシーポリシー（日本語）
-│   └── _config.yml         # Jekyll設定
+├── docs/                   # GitHub Pages documentation
+│   ├── index.md            # Homepage (Japanese)
+│   ├── privacy.md          # Privacy policy (Japanese)
+│   └── _config.yml         # Jekyll configuration
 │
-└── publish/                # ビルド出力（.gitignore対象）
-    ├── OtakAgent-Portable.zip  # ポータブル版
-    ├── OtakAgent.msi           # MSIインストーラー
-    └── portable/               # ポータブル版作業ディレクトリ
+└── publish/                # Build output (gitignored)
+    ├── otak-agent-portable.zip  # Portable version
+    ├── otak-agent.msi           # MSI installer
+    └── portable/                # Portable version working directory
 ```
 
-## アーキテクチャ概要
+## Architecture Overview
 
-### ソリューション構造
-これはMicrosoft Officeアシスタント（Clippy、Kairu等）を再現したパロディソフトウェアです。懐かしのデスクトップマスコットを現代の技術で蘇らせた.NET 10 WinFormsアプリケーションです。ソリューションは関心の分離によるクリーンアーキテクチャに従っています：
+### Solution Structure
+This is parody software recreating Microsoft Office assistants (Clippy, Kairu, etc.). It's a .NET 10 WinForms application bringing back nostalgic desktop mascots with modern technology. The solution follows clean architecture with separation of concerns:
 
-- **OtakAgent.Core** (クラスライブラリ): ビジネスロジック、サービス、モデル
-  - 設定管理（設定、INI移行）
-  - OpenAI互換API統合のチャットサービス
-  - Clippy/Kairuペルソナ用のパーソナリティプロンプトビルダー
-  - クリップボードホットキー監視サービス
+- **OtakAgent.Core** (Class Library): Business logic, services, models
+  - Configuration management (settings, INI migration)
+  - Chat service for OpenAI-compatible API integration
+  - Personality prompt builder for Clippy/Kairu personas
+  - Clipboard hotkey monitoring service
 
-- **OtakAgent.App** (WinFormsアプリ): プレゼンテーション層
-  - Microsoft.Extensions.DependencyInjectionによる依存性注入セットアップ
-  - ボーダーレスデザインのメインフローティングウィンドウ
-  - 設定管理用の設定フォーム
-  - リソースアセット（GIF、WAV、PNG）
+- **OtakAgent.App** (WinForms App): Presentation layer
+  - Dependency injection setup via Microsoft.Extensions.DependencyInjection
+  - Main floating window with borderless design
+  - Settings form for configuration management
+  - Resource assets (GIF, WAV, PNG)
 
-### 主要サービス依存関係
-アプリケーションはコンストラクタ依存性注入で以下のコアサービスを使用：
-- `ChatService`: OpenAI互換エンドポイントとのAPI通信を処理
-- `SettingsService`: JSON設定の永続化を管理
-- `PersonalityPromptBuilder`: ペルソナ固有のシステムプロンプトを構築
-- `UpdateChecker`: GitHubリリースから更新をチェック
+### Key Service Dependencies
+The application uses the following core services via constructor dependency injection:
+- `ChatService`: Handles API communication with OpenAI-compatible endpoints
+- `SettingsService`: Manages JSON settings persistence
+- `PersonalityPromptBuilder`: Builds persona-specific system prompts
+- `UpdateChecker`: Checks for updates from GitHub releases
 
-### 設定フロー
-1. 実行ファイルの隣に`agenttalk.settings.json`として設定を保存
-2. 初回起動時にデフォルト設定を作成
-3. オプションで`%AppData%/AgentTalk/history.json`に履歴を永続化
+### Settings Flow
+1. Settings saved as `agenttalk.settings.json` next to executable
+2. Default settings created on first launch
+3. Optionally persist history to `%AppData%/AgentTalk/history.json`
 
-### UI動作パターン
-- ボーダーレス、常に最前面のフローティングウィンドウ
-- マウスダウン/移動イベントによるドラッグで移動
-- ダブルクリックで表示切り替え
-- コンテキストメニュー付きシステムトレイアイコン
-- Ctrl+Enterで送信、Ctrl+Backspaceでリセット
-- 会話継続モードでの文脈保持
+### UI Behavior Patterns
+- Borderless, always-on-top floating window
+- Move via drag with mouse down/move events
+- Double-click to toggle visibility
+- System tray icon with context menu
+- Ctrl+Enter to send, Ctrl+Backspace to reset
+- Context preservation in conversation continuation mode
 
-## 重要なコンテキスト
+## Important Context
 
-### プロジェクト構成
-単一の統合ビルドスクリプト`build-packages.ps1`で全パッケージング処理を管理。不要なスクリプトは削除済み。
+### Project Configuration
+All packaging processes are managed through a single integrated build script `build-packages.ps1`. Unnecessary scripts have been removed.
 
-### 重要なファイル
-- **build-packages.ps1**: 統合パッケージングスクリプト（Portable/MSI/MSIX対応）
-- **installer/OtakAgent.wxs**: WiX v5用MSI定義ファイル
-- **OtakAgent.Package/**: MSIX関連ファイル
-  - `Package.appxmanifest`: MSIXマニフェスト
-  - `create-certificate.ps1`: 署名証明書生成
-  - `generate-assets.ps1`: Storeアセット生成
+### Important Files
+- **build-packages.ps1**: Integrated packaging script (supports Portable/MSI/MSIX)
+- **installer/OtakAgent.wxs**: WiX v5 MSI definition file
+- **OtakAgent.Package/**: MSIX-related files
+  - `Package.appxmanifest`: MSIX manifest
+  - `create-certificate.ps1`: Signing certificate generation
+  - `generate-assets.ps1`: Store asset generation
 
-### アセット管理
-GIF/PNG/WAVリソースは現在`src/OtakAgent.App/Resources/`にあり、ビルド時に出力にコピーされます。透過処理にはマゼンタカラーキー（RGB 255,0,255）を使用。
+### Asset Management
+GIF/PNG/WAV resources are currently in `src/OtakAgent.App/Resources/` and are copied to output during build. Uses magenta color key (RGB 255,0,255) for transparency.
 
-### Microsoft Storeアセット
-StoreアセットはMSIXパッケージング用に`OtakAgent.Package/Images/`に配置：
-- **Square150x150Logo.png** - 中タイル (150x150)
-- **Square44x44Logo.png** - 小アプリアイコン (44x44)
-- **Square44x44Logo.targetsize-24_altform-unplated.png** - タスクバーアイコン (24x24)
-- **Wide310x150Logo.png** - ワイドタイル (310x150)
-- **SmallTile.png** - 小タイル (71x71)
-- **LargeTile.png** - 大タイル (310x310)
-- **StoreLogo.png** - ストアリスティングロゴ (50x50)
-- **SplashScreen.png** - アプリスプラッシュ画面 (620x300)
+### Microsoft Store Assets
+Store assets are placed in `OtakAgent.Package/Images/` for MSIX packaging:
+- **Square150x150Logo.png** - Medium tile (150x150)
+- **Square44x44Logo.png** - Small app icon (44x44)
+- **Square44x44Logo.targetsize-24_altform-unplated.png** - Taskbar icon (24x24)
+- **Wide310x150Logo.png** - Wide tile (310x150)
+- **SmallTile.png** - Small tile (71x71)
+- **LargeTile.png** - Large tile (310x310)
+- **StoreLogo.png** - Store listing logo (50x50)
+- **SplashScreen.png** - App splash screen (620x300)
 
-ベースアイコンからこれらのアセットを再生成するには`generate-assets.ps1`スクリプトを使用。
+Use `generate-assets.ps1` script to regenerate these assets from base icon.
 
-### MSIXパッケージングとMicrosoft Store配布
-`OtakAgent.Package/`ディレクトリにはMSIXパッケージ作成用のWindows Application Packaging Projectが含まれます：
-- **OtakAgent.Package.wapproj** - Visual Studio用パッケージングプロジェクトファイル
-- **Package.appxmanifest** - アプリID、機能、ビジュアル要素を定義するアプリケーションマニフェスト
-- **create-certificate.ps1** - パッケージ署名用の自己署名証明書生成スクリプト
-- **generate-assets.ps1** - ベースイメージからStoreアイコンを生成するスクリプト
+### MSIX Packaging and Microsoft Store Distribution
+`OtakAgent.Package/` directory contains Windows Application Packaging Project for MSIX package creation:
+- **OtakAgent.Package.wapproj** - Visual Studio packaging project file
+- **Package.appxmanifest** - Application manifest defining app ID, capabilities, and visual elements
+- **create-certificate.ps1** - Self-signed certificate generation script for package signing
+- **generate-assets.ps1** - Script to generate Store icons from base image
 
-#### MSIXパッケージのビルド方法
+#### Building MSIX Package
 
-##### 方法1: Windows SDK makeappxツール使用（推奨）
+##### Method 1: Using Windows SDK makeappx tool (Recommended)
 ```powershell
-# 1. ポータブル版をビルド
+# 1. Build portable version
 dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable
 
-# 2. AppxManifestを配置
+# 2. Deploy AppxManifest
 Copy-Item OtakAgent.Package\Package.appxmanifest publish\portable\AppxManifest.xml
 
-# 3. MSIXパッケージ作成（Windows SDK必須）
-& "C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe" pack /d publish\portable /p publish\OtakAgent.msix /nv
+# 3. Create MSIX package (Windows SDK required)
+& "C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe" pack /d publish\portable /p publish\otak-agent.msix /nv
 ```
 
-##### 方法2: build-packages.ps1スクリプト使用
+##### Method 2: Using build-packages.ps1 script
 ```powershell
 powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX
 ```
 
-##### 方法3: Visual Studio 2022使用（.NET 10 SDK対応後）
+##### Method 3: Using Visual Studio 2022 (after .NET 10 SDK support)
 ```powershell
 msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64
 ```
 
-#### Microsoft Store提出用
-- 生成されたMSIXパッケージをパートナーセンターにアップロード
-- パッケージはx64アーキテクチャ対応
-- Windows 11バージョン22621.0以上が必要
-- 署名は必須（Store署名またはテスト用自己署名証明書）
+#### Microsoft Store Submission
+- Upload generated MSIX package to Partner Center
+- Package supports x64 architecture
+- Requires Windows 11 version 22621.0 or higher
+- Signing is mandatory (Store signing or test self-signed certificate)
 
-### 日本語サポート
-アプリケーションはバイリンガルペルソナ（日本語/英語）をサポートし、ロケール検出にSystem.Globalizationを使用。UI文字列は現在ハードコードされていますが、ローカライゼーション対応準備済み。
+### Japanese Language Support
+The application supports bilingual personas (Japanese/English) and uses System.Globalization for locale detection. UI strings are currently hardcoded but ready for localization.
 
-### Windows固有機能
-- クリップボード監視とウィンドウ管理にP/Invokeを使用
-- デスクトップ開発ツール付きWindows 11が必要
-- ターゲットフレームワークは`net10.0-windows`
+### Windows-Specific Features
+- Uses P/Invoke for clipboard monitoring and window management
+- Requires Windows 11 with desktop development tools
+- Target framework is `net10.0-windows`
