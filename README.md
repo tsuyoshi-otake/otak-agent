@@ -1,10 +1,19 @@
-# otak-agent
+<p align="center">
+  <h1 align="center">otak-agent</h1>
+  <p align="center">
+    懐かしのMicrosoft Officeアシスタントを再現したパロディソフトウェアです。.NET 10 WinFormsで実装された現代版のデスクトップマスコット/アシスタントです。
+  </p>
+</p>
 
-懐かしのMicrosoft Officeアシスタントを再現したパロディソフトウェアです。.NET 10 WinFormsで実装された現代版のデスクトップマスコット/アシスタントです。
+---
 
 ## ClippyとKairuへの愛を込めて
 
 クリッピー（Clippy）とカイル（Kairu）は、ただのアニメーションキャラクターではありません。彼らは90年代から2000年代初頭にかけて、無数のユーザーのコンピューター作業を見守り、時にはお節介とも思えるヘルプを提供してきました。
+
+<p align="center">
+  <img src="docs/images/kairu.png" alt="otak-agent - Kairu Assistant" width="600">
+</p>
 
 「お手伝いが必要のようですね！」というクリッピーのメッセージは、多くの人にとってミームとなり、インターネット文化の一部となりました。しかし、その本質はユーザーに寄り添い、サポートしようとする優しさにありました。
 
