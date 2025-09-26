@@ -19,6 +19,7 @@ partial class MainForm
     private NotifyIcon _notifyIcon = null!;
     private ContextMenuStrip _notifyContextMenu = null!;
     private ToolStripMenuItem _notifyToggleTopMostMenuItem = null!;
+    private ToolStripMenuItem _notifyAutoStartMenuItem = null!;
     private ToolStripMenuItem _notifyExitMenuItem = null!;
     private ToolTip _toolTip = null!;
 
@@ -50,6 +51,7 @@ partial class MainForm
         _notifyIcon = new NotifyIcon(components);
         _notifyContextMenu = new ContextMenuStrip(components);
         _notifyToggleTopMostMenuItem = new ToolStripMenuItem();
+        _notifyAutoStartMenuItem = new ToolStripMenuItem();
         _notifyExitMenuItem = new ToolStripMenuItem();
         _toolTip = new ToolTip(components);
         _bubblePanel.SuspendLayout();
@@ -144,9 +146,9 @@ partial class MainForm
         //_notifyContextMenu
         //
         _notifyContextMenu.ImageScalingSize = new Size(20, 20);
-        _notifyContextMenu.Items.AddRange(new ToolStripItem[] { _notifyToggleTopMostMenuItem, _notifyExitMenuItem });
+        _notifyContextMenu.Items.AddRange(new ToolStripItem[] { _notifyToggleTopMostMenuItem, _notifyAutoStartMenuItem, _notifyExitMenuItem });
         _notifyContextMenu.Name = "_notifyContextMenu";
-        _notifyContextMenu.Size = new Size(158, 48);
+        _notifyContextMenu.Size = new Size(158, 70);
         //
         //_notifyToggleTopMostMenuItem
         //
@@ -155,6 +157,13 @@ partial class MainForm
         _notifyToggleTopMostMenuItem.Name = "_notifyToggleTopMostMenuItem";
         _notifyToggleTopMostMenuItem.Size = new Size(157, 22);
         _notifyToggleTopMostMenuItem.Text = "Always on Top";
+        //
+        //_notifyAutoStartMenuItem
+        //
+        _notifyAutoStartMenuItem.CheckOnClick = true;
+        _notifyAutoStartMenuItem.Name = "_notifyAutoStartMenuItem";
+        _notifyAutoStartMenuItem.Size = new Size(157, 22);
+        _notifyAutoStartMenuItem.Text = "Windows起動時に自動起動";
         //
         //_notifyExitMenuItem
         //

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-    <Package Name="OtakAgent"
+    <Package Name="otak-agent"
              Language="1041"
              Codepage="932"
-             Version="1.3.0.0"
+             Version="1.5.2.0"
              Manufacturer="Tsuyoshi Otake"
              UpgradeCode="B7E5D3F2-8A4C-4E9B-9D1A-F5C8E3A2B1D0"
              InstallerVersion="500"
@@ -14,7 +14,7 @@
         <MajorUpgrade
             DowngradeErrorMessage="新しいバージョンの [ProductName] が既にインストールされています。"
             AllowSameVersionUpgrades="yes"
-            Schedule="afterInstallInitialize" />
+            Schedule="afterInstallValidate" />
 
         <Media Id="1" Cabinet="OtakAgent.cab" EmbedCab="yes" />
 
@@ -25,22 +25,49 @@
         <!-- License file -->
         <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 
+        <!-- Custom dialog bitmaps -->
+        <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
+        <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+
+        <!-- Properties for startup shortcut -->
+        <Property Id="STARTUPSHORTCUT" Value="1" />
+
         <!-- Dialog customization -->
-        <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="OtakAgentのインストールが完了しました。&#13;&#10;&#13;&#10;スタートメニューまたはデスクトップのショートカットからOtakAgentを起動できます。" />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="otak-agentのインストールが完了しました。&#13;&#10;&#13;&#10;Windows起動時に自動起動が設定されました。&#13;&#10;スタートメニューまたはデスクトップのショートカットからも起動できます。" />
+
+        <!-- Launch application checkbox -->
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="otak-agentを起動する" />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+        <Property Id="WixShellExecTarget" Value="[#OtakAgent.App.exe]" />
+        <CustomAction Id="LaunchApplication"
+                      ExeCommand=""
+                      FileRef="OtakAgent.App.exe"
+                      Impersonate="yes"
+                      Return="asyncNoWait" />
 
         <!-- アイコン -->
-        <Icon Id="OtakAgent.ico" SourceFile="..\src\OtakAgent.App\Resources\app.ico" />
+        <Icon Id="OtakAgent.ico" SourceFile="kairu.ico" />
         <Property Id="ARPPRODUCTICON" Value="OtakAgent.ico" />
         <Property Id="ARPURLINFOABOUT" Value="https://github.com/tsuyoshi-otake/otak-agent" />
         <Property Id="ARPCOMMENTS" Value="AI搭載デスクトップアシスタント" />
 
         <!-- ディレクトリ構造 -->
         <StandardDirectory Id="ProgramFiles64Folder">
-            <Directory Id="INSTALLFOLDER" Name="OtakAgent">
+            <Directory Id="INSTALLFOLDER" Name="otak-agent">
                 <Component Id="OtakAgent.App.exe" Guid="A1B2C3D4-E5F6-4789-0123-456789ABCDEF">
                     <File Id="OtakAgent.App.exe"
                           Source="..\publish\portable\OtakAgent.App.exe"
                           KeyPath="yes" />
+                </Component>
+
+                <!-- Windows起動時自動起動 (レジストリ) -->
+                <Component Id="AutoStartRegistry" Guid="81B2C3D4-E5F6-4789-0123-456789ABCDEF" Condition="STARTUPSHORTCUT = 1">
+                    <RegistryValue Root="HKCU"
+                                   Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                                   Name="otak-agent"
+                                   Type="string"
+                                   Value="&quot;[INSTALLFOLDER]OtakAgent.App.exe&quot;"
+                                   KeyPath="yes" />
                 </Component>
 
                 <!-- 設定ファイルはProgram Filesに含めない (AppDataに自動生成される) -->
@@ -114,7 +141,7 @@
                               IconIndex="0" />
                     <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
                     <RegistryValue Root="HKCU"
-                                   Key="Software\OtakAgent"
+                                   Key="Software\otak-agent"
                                    Name="installed"
                                    Type="integer"
                                    Value="1"
@@ -137,7 +164,7 @@
                             Name="otak-agent.lnk"
                             On="uninstall" />
                 <RegistryValue Root="HKCU"
-                               Key="Software\OtakAgent"
+                               Key="Software\otak-agent"
                                Name="desktopShortcut"
                                Type="integer"
                                Value="1"
@@ -145,9 +172,32 @@
             </Component>
         </StandardDirectory>
 
+        <!-- スタートアップ -->
+        <StandardDirectory Id="StartupFolder">
+            <Component Id="StartupShortcut" Guid="71B2C3D4-E5F6-4789-0123-456789ABCDEF" Condition="STARTUPSHORTCUT = 1">
+                <Shortcut Id="ApplicationStartupShortcut"
+                          Name="otak-agent"
+                          Description="AI搭載デスクトップアシスタント"
+                          Target="[INSTALLFOLDER]OtakAgent.App.exe"
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="OtakAgent.ico"
+                          IconIndex="0" />
+                <RemoveFile Id="RemoveStartupShortcut"
+                            Name="otak-agent.lnk"
+                            On="uninstall" />
+                <RegistryValue Root="HKCU"
+                               Key="Software\otak-agent"
+                               Name="startupShortcut"
+                               Type="integer"
+                               Value="1"
+                               KeyPath="yes" />
+            </Component>
+        </StandardDirectory>
+
         <!-- 機能定義 -->
-        <Feature Id="ProductFeature" Title="OtakAgent" Level="1">
+        <Feature Id="ProductFeature" Title="otak-agent" Level="1">
             <ComponentRef Id="OtakAgent.App.exe" />
+            <ComponentRef Id="AutoStartRegistry" />
             <ComponentRef Id="clippy.gif" />
             <ComponentRef Id="clippy_start.gif" />
             <ComponentRef Id="kairu.gif" />
@@ -160,6 +210,12 @@
             <ComponentRef Id="menucommand.wav" />
             <ComponentRef Id="ApplicationShortcut" />
             <ComponentRef Id="DesktopShortcut" />
+            <ComponentRef Id="StartupShortcut" />
         </Feature>
+
+        <!-- Launch application after installation if checkbox is checked -->
+        <InstallExecuteSequence>
+            <Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed AND WIXUI_EXITDIALOGOPTIONALCHECKBOX = &quot;1&quot; AND UILevel > 1" />
+        </InstallExecuteSequence>
     </Package>
 </Wix>

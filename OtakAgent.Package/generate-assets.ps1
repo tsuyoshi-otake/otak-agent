@@ -1,6 +1,6 @@
 # PowerShell script to generate Microsoft Store assets from character images
 param(
-    [string]$SourceImage = "..\src\OtakAgent.App\Resources\kairu_start.gif",
+    [string]$SourceImage = "..\src\OtakAgent.App\Resources\kairu.gif",
     [string]$FallbackIcon = "..\src\OtakAgent.App\Resources\app.ico"
 )
 

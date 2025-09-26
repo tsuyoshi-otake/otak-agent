@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using OtakAgent.Core.Chat;
 using OtakAgent.Core.Configuration;
 using OtakAgent.Core.Personality;
@@ -68,6 +69,7 @@ public partial class MainForm : Form
         _secondaryButton.Click += async (_, _) => await HandleSecondaryButtonClickAsync();
         _expandToggleButton.Click += (_, _) => ToggleExpandedView();
         _notifyToggleTopMostMenuItem.CheckedChanged += (_, _) => TopMost = _notifyToggleTopMostMenuItem.Checked;
+        _notifyAutoStartMenuItem.CheckedChanged += NotifyAutoStartMenuItem_CheckedChanged;
         _notifyExitMenuItem.Click += (_, _) => Close();
         _notifyIcon.MouseDoubleClick += (_, _) => ToggleWindowVisibility(true);
         _inputTextBox.KeyDown += InputTextBox_KeyDown;
@@ -984,6 +986,11 @@ public partial class MainForm : Form
         _notifyToggleTopMostMenuItem.Checked = TopMost;
         _notifyContextMenu.Items.Add(_notifyToggleTopMostMenuItem);
 
+        // Update the Auto-start menu item
+        _notifyAutoStartMenuItem.Text = _settings.English ? "Start with Windows" : "Windows起動時に自動起動";
+        _notifyAutoStartMenuItem.Checked = IsAutoStartEnabled();
+        _notifyContextMenu.Items.Add(_notifyAutoStartMenuItem);
+
         // Update the existing Exit menu item
         _notifyExitMenuItem.Text = _settings.English ? "Exit" : "終了";
         _notifyContextMenu.Items.Add(_notifyExitMenuItem);
@@ -1005,6 +1012,61 @@ public partial class MainForm : Form
         BeginInvoke(() =>
         {
             _toolTip.Show(message, _characterPicture, 50, 50, 3000);
+        });
+    }
+
+    private bool IsAutoStartEnabled()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false);
+            return key?.GetValue("otak-agent") != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void SetAutoStart(bool enable)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+            if (key == null) return;
+
+            if (enable)
+            {
+                var exePath = Application.ExecutablePath;
+                key.SetValue("otak-agent", $"\"{exePath}\"");
+            }
+            else
+            {
+                key.DeleteValue("otak-agent", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            var message = _settings.English
+                ? $"Failed to update auto-start setting: {ex.Message}"
+                : $"自動起動設定の更新に失敗しました: {ex.Message}";
+
+            MessageBox.Show(this, message, "otak-agent", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    private void NotifyAutoStartMenuItem_CheckedChanged(object? sender, EventArgs e)
+    {
+        SetAutoStart(_notifyAutoStartMenuItem.Checked);
+
+        // Show confirmation message
+        var message = _notifyAutoStartMenuItem.Checked
+            ? (_settings.English ? "Auto-start enabled" : "自動起動を有効にしました")
+            : (_settings.English ? "Auto-start disabled" : "自動起動を無効にしました");
+
+        BeginInvoke(() =>
+        {
+            _toolTip.Show(message, _characterPicture, 50, 50, 2000);
         });
     }
 

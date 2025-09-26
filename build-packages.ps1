@@ -123,7 +123,7 @@ if ($MSI -or $All) {
         $msiPath = Join-Path $OutputDir "otak-agent.msi"
 
         Push-Location installer
-        & wix build OtakAgent.wxs -arch x64 -ext WixToolset.UI.wixext -o "publish\otak-agent.msi"
+        & wix build OtakAgent.wxs -arch x64 -ext WixToolset.UI.wixext -culture ja-JP -loc JapaneseStrings.wxl -o "publish\otak-agent.msi"
         Pop-Location
 
         if ($LASTEXITCODE -eq 0) {

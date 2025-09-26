@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WixLocalization Culture="ja-JP" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+    <!-- UI Strings -->
+    <String Id="WelcomeDlgTitle" Value="{\WixUI_Font_Bigger}otak-agent セットアップウィザードへようこそ" />
+    <String Id="WelcomeDlgDescription" Value="セットアップウィザードは [ProductName] をお使いのコンピューターにインストールします。[Next] をクリックして続行するか、[Cancel] をクリックしてセットアップを終了してください。" />
+
+    <String Id="LicenseDlgTitle" Value="{\WixUI_Font_Title}使用許諾契約書" />
+    <String Id="LicenseDlgDescription" Value="以下の使用許諾契約書をよくお読みください。" />
+    <String Id="LicenseDlgLicenseText" Value="使用許諾契約書:" />
+    <String Id="LicenseDlgAcceptText" Value="使用許諾契約書に同意します(&amp;A)" />
+    <String Id="LicenseDlgDeclineText" Value="使用許諾契約書に同意しません(&amp;D)" />
+
+    <String Id="InstallDirDlgTitle" Value="{\WixUI_Font_Title}インストール先フォルダー" />
+    <String Id="InstallDirDlgDescription" Value="[ProductName] のインストール先を選択してください。" />
+    <String Id="InstallDirDlgBrowse" Value="参照(&amp;B)..." />
+    <String Id="InstallDirDlgChange" Value="変更(&amp;C)..." />
+
+    <String Id="ProgressDlgTitle" Value="{\WixUI_Font_Title}インストール中" />
+    <String Id="ProgressDlgDescription" Value="[ProductName] をインストールしています。しばらくお待ちください。" />
+    <String Id="ProgressDlgInstallText" Value="インストール中:" />
+
+    <String Id="ExitDlgTitle" Value="{\WixUI_Font_Bigger}otak-agent セットアップウィザードの完了" />
+    <String Id="ExitDlgDescription" Value="otak-agent のインストールが正常に完了しました。" />
+    <String Id="ExitDlgFinish" Value="完了(&amp;F)" />
+
+    <!-- Button labels -->
+    <String Id="ButtonTextNext" Value="次へ(&amp;N) &gt;" />
+    <String Id="ButtonTextBack" Value="&lt; 戻る(&amp;B)" />
+    <String Id="ButtonTextCancel" Value="キャンセル" />
+    <String Id="ButtonTextOK" Value="OK" />
+    <String Id="ButtonTextYes" Value="はい(&amp;Y)" />
+    <String Id="ButtonTextNo" Value="いいえ(&amp;N)" />
+    <String Id="ButtonTextInstall" Value="インストール(&amp;I)" />
+    <String Id="ButtonTextRemove" Value="削除(&amp;R)" />
+    <String Id="ButtonTextFinish" Value="完了(&amp;F)" />
+    <String Id="ButtonTextBrowse" Value="参照(&amp;B)..." />
+
+    <!-- Error messages -->
+    <String Id="Error_InvalidDirectory" Value="無効なディレクトリです。" />
+    <String Id="Error_InsufficientSpace" Value="ディスク容量が不足しています。" />
+    <String Id="Error_AdminRequired" Value="このインストールには管理者権限が必要です。" />
+
+    <!-- Feature descriptions -->
+    <String Id="FeatureMainDescription" Value="otak-agent メインプログラム" />
+    <String Id="FeatureResourcesDescription" Value="キャラクターとサウンドリソース" />
+
+    <!-- Other messages -->
+    <String Id="DiskSpaceRequirements" Value="必要なディスク容量: " />
+    <String Id="AvailableDiskSpace" Value="使用可能なディスク容量: " />
+    <String Id="SetupTypeTypical" Value="標準" />
+    <String Id="SetupTypeCustom" Value="カスタム" />
+    <String Id="SetupTypeComplete" Value="完全" />
+</WixLocalization>

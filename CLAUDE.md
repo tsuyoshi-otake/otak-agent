@@ -30,13 +30,40 @@ Using the integrated build script `build-packages.ps1`:
 Prerequisites:
 - Portable: .NET 10 SDK
 - MSI: WiX v5 (`dotnet tool install -g wix`)
-- MSIX: Visual Studio 2022 + Windows Application Packaging Project extension
+- MSIX: Windows SDK (for makeappx.exe) or Visual Studio 2022 + Windows Application Packaging Project extension
+
+### MSIX Package Creation
+Due to Visual Studio 2022's .NET SDK 9.0.305 not supporting .NET 10 RC1, use the Windows SDK makeappx tool directly:
+
+#### Method 1: Using makeappx (Recommended for .NET 10 RC1)
+```powershell
+# 1. Build portable version
+dotnet publish src/OtakAgent.App -c Release -r win-x64 --self-contained false -o ./publish/portable
+
+# 2. Copy MSIX manifest
+Copy-Item OtakAgent.Package\Package.appxmanifest publish\portable\AppxManifest.xml
+
+# 3. Create MSIX package
+& "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /d publish\portable /p publish\otak-agent.msix /nv
+```
+
+#### Method 2: Using build script (after Visual Studio .NET 10 support)
+```powershell
+powershell -ExecutionPolicy Bypass -File build-packages.ps1 -MSIX
+```
+
+#### Method 3: Using Visual Studio (after .NET 10 SDK support)
+```powershell
+msbuild OtakAgent.Package\OtakAgent.Package.wapproj /p:Configuration=Release /p:Platform=x64
+```
+
+**Note**: Current workaround disables PublishReadyToRun for MSIX builds in `OtakAgent.App.csproj`.
 
 ### Version Management
 **IMPORTANT**: Always update the version number in `installer/OtakAgent.wxs` when releasing a new version.
 
 #### Current Version
-- **v1.3.0.0** (September 26, 2025)
+- **v1.5.2.0** (September 26, 2025)
 
 #### Version Update Steps
 1. Open `installer/OtakAgent.wxs`
