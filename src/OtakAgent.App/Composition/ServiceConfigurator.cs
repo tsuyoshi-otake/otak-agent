@@ -19,7 +19,7 @@ internal static class ServiceConfigurator
         var services = new ServiceCollection();
 
         var baseDirectory = AppContext.BaseDirectory;
-        var settingsPath = Path.Combine(baseDirectory, "agenttalk.settings.json");
+        var settingsPath = Path.Combine(baseDirectory, "otak-agent.settings.json");
         var legacyIniPath = Path.Combine(baseDirectory, "agenttalk.ini");
         var legacySystemPromptPath = Path.Combine(baseDirectory, "SystemPrompt.ini");
 

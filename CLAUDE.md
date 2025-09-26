@@ -36,7 +36,7 @@ Prerequisites:
 **IMPORTANT**: Always update the version number in `installer/OtakAgent.wxs` when releasing a new version.
 
 #### Current Version
-- **v1.2.0.0** (September 26, 2025)
+- **v1.3.0.0** (September 26, 2025)
 
 #### Version Update Steps
 1. Open `installer/OtakAgent.wxs`
@@ -154,7 +154,7 @@ The application uses the following core services via constructor dependency inje
 - `UpdateChecker`: Checks for updates from GitHub releases
 
 ### Settings Flow
-1. Settings saved as `agenttalk.settings.json` next to executable
+1. Settings saved as `otak-agent.settings.json` next to executable
 2. Default settings created on first launch
 3. Optionally persist history to `%AppData%/AgentTalk/history.json`
 

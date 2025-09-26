@@ -63,7 +63,7 @@ public sealed class SettingsService
                 appDataPath = Path.GetTempPath();
             }
 
-            var appDataSettingsPath = Path.Combine(appDataPath, "agenttalk.settings.json");
+            var appDataSettingsPath = Path.Combine(appDataPath, "otak-agent.settings.json");
 
             // Copy initial settings from Program Files if AppData file doesn't exist
             if (!File.Exists(appDataSettingsPath) && File.Exists(defaultPath))
