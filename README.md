@@ -12,7 +12,7 @@
 クリッピー（Clippy）とカイル（Kairu）は、ただのアニメーションキャラクターではありません。彼らは90年代から2000年代初頭にかけて、無数のユーザーのコンピューター作業を見守り、時にはお節介とも思えるヘルプを提供してきました。
 
 <p align="center">
-  <img src="docs/images/kairu.png" alt="otak-agent - Kairu Assistant" width="600">
+  <img src="docs/images/kairu.png" alt="otak-agent - Kairu Assistant">
 </p>
 
 「お手伝いが必要のようですね！」というクリッピーのメッセージは、多くの人にとってミームとなり、インターネット文化の一部となりました。しかし、その本質はユーザーに寄り添い、サポートしようとする優しさにありました。
